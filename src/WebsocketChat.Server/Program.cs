@@ -1,7 +1,10 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebSockets;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -9,11 +12,14 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server
 {
     public class Program
     {
+        public IConfiguration Configuration { get; }
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -55,7 +61,7 @@ namespace WebsocketChat.Server
 
                     var manager = context.RequestServices.GetRequiredService<WebSocketConnectionManager>();
 
-                    await EchoAsync(webSocket, manager);
+                    await HandleWebsocketRequestAsync(webSocket, manager);
                 }
             });
 
@@ -64,6 +70,47 @@ namespace WebsocketChat.Server
 
         public static void ConfigureServices(IServiceCollection services)
         {
+            /*
+            var connString = Configuration.GetConnectionString(ConnectionStringName);
+
+            services.AddDbContext<AuthApiDbContext>(options =>
+                options.UseSqlServer(connectionString: connString));
+            services.AddIdentity<Api.Identity.User, IdentityRole>()
+                .AddEntityFrameworkStores<AuthApiDbContext>()
+                .AddDefaultTokenProviders();
+
+
+            var tokenSettings = Configuration.GetSection("JwtTokenSettings");
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = tokenSettings[JwtIssuerConfigKey],
+                        ValidateAudience = true,
+                        ValidAudience = tokenSettings[JwtAudienceConfigKey],
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenSettings[JwtSecretKeyConfigKey])),
+                        ValidateLifetime = false,
+                    };
+                });
+
+            services.Configure<JwtTokenSettings>(tokenSettings);
+            services.AddScoped<JwtTokenService>();
+            */
+
+            services.AddControllers();
+
+            // CORS
+
             services.AddCors(options =>
             {
                 options.AddPolicy(name: "AllowAll",
@@ -75,6 +122,8 @@ namespace WebsocketChat.Server
                                   });
             });
 
+            // Websocket services
+
             services.AddSingleton<WebSocketConnectionManager>();
 
             services.AddWebSockets(options =>
@@ -83,7 +132,7 @@ namespace WebsocketChat.Server
             });
         }
 
-        private static async Task EchoAsync(WebSocket webSocket, WebSocketConnectionManager manager,
+        private static async Task HandleWebsocketRequestAsync(WebSocket webSocket, WebSocketConnectionManager manager,
             CancellationToken ct = default)
         {
             var buffer = new byte[1024 * 4];

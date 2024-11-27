@@ -43,19 +43,14 @@ function createMessageElement(messageType, text, time) {
     messageDiv.className = 'message ' + messageType;
     messageDiv.textContent = text;
 
-    // Создание вложенного span для метаданных
     const metadataSpan = document.createElement('span');
     metadataSpan.className = 'metadata';
-
-    // Создание вложенного span для времени
+    
     const timeSpan = document.createElement('span');
     timeSpan.className = 'time';
     timeSpan.textContent = time;
 
-    // Встраиваем timeSpan в metadataSpan
     metadataSpan.appendChild(timeSpan);
-
-    // Встраиваем metadataSpan в messageDiv
     messageDiv.appendChild(metadataSpan);
 
     return messageDiv;
