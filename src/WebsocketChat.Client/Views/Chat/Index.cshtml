@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Чат";
+}
+
+<div class="conversation">
+    <div id="messages" class="conversation-container">
+    </div>
+    <form id="chat-form" class="conversation-compose">
+        <input class="input-msg" id="message-input" name="input"
+            placeholder="Введите сообщение" autocomplete="off" required></input>
+        <button type="submit" class="send">
+            <div class="circle">
+                <i class="far fa-paper-plane"></i>
+            </div>
+        </button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        let socket = new WebSocket("ws://localhost:5000/ws");
+        const messages = document.getElementById("messages");
+
+        socket.onmessage = function (event) {
+            let messageToAdd = createMessageElement(RECEIVED, event.data, getCurrentTime())
+            messages.appendChild(messageToAdd);
+            scrollToLastMessage();
+        };
+
+        function sendMessage() {
+            let messageInput = document.getElementById("message-input");
+            socket.send(messageInput.value);
+
+            let messageToAdd = createMessageElement(SENT, messageInput.value, getCurrentTime())
+            messages.appendChild(messageToAdd);
+            scrollToLastMessage();
+
+            messageInput.value = '';
+        }
+
+        socket.onclose = function (event) {
+            if (event.wasClean) {
+                alert(`Соединение закрыто чисто, код=${event.code}, причина=${event.reason}`);
+            } else {
+                alert('Соединение прервано');
+            }
+        };
+
+        socket.onerror = function (error) {
+            alert(`[Ошибка] ${error.message}`);
+            debugger;
+        };
+    </script>
+}

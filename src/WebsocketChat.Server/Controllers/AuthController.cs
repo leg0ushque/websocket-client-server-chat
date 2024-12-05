@@ -37,10 +37,7 @@ namespace WebsocketChat.Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            if (model is null)
-            {
-                throw new ArgumentNullException(nameof(model));
-            }
+            ArgumentNullException.ThrowIfNull(model);
 
             var user = new User
             {
@@ -61,10 +58,7 @@ namespace WebsocketChat.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            if (model is null)
-            {
-                throw new ArgumentNullException(nameof(model));
-            }
+            ArgumentNullException.ThrowIfNull(model);
 
             return LoginUser(model.Email, model.Password);
         }
@@ -82,10 +76,7 @@ namespace WebsocketChat.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
         {
-            if (model is null)
-            {
-                throw new ArgumentNullException(nameof(model));
-            }
+            ArgumentNullException.ThrowIfNull(model);
 
             return ChangeCurrentUserPassword(model.OldPassword, model.NewPassword);
         }

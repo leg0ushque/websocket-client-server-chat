@@ -15,9 +15,9 @@ namespace WebsocketChat.Server.Services
     public class JwtTokenService
     {
         private const int DaysExpirationTerm = 50;
-        private readonly JwtTokenSettings _settings;
+        private readonly JwtTokenOptions _settings;
 
-        public JwtTokenService(IOptions<JwtTokenSettings> options)
+        public JwtTokenService(IOptions<JwtTokenOptions> options)
         {
             if (options != null)
             {
