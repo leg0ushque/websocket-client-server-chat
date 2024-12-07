@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebsocketChat.Server.Models
+namespace WebsocketChat.Library.Models
 {
     public class LoginModel
     {

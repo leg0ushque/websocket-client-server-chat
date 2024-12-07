@@ -11,7 +11,6 @@ using WebsocketChat.Server.Identity;
 
 namespace WebsocketChat.Server.Services
 {
-
     public class JwtTokenService
     {
         private const int DaysExpirationTerm = 50;
@@ -38,7 +37,7 @@ namespace WebsocketChat.Server.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(Identity.IdentityConstants.UserIdClaimType, user.Id),
-                new Claim(JwtRegisteredClaimNames.GivenName, user.UserName),
+                new Claim(JwtRegisteredClaimNames.GivenName, user.Nickname),
             };
 
             userClaims.AddRange(roleClaims);

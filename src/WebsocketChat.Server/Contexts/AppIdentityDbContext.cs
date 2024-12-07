@@ -30,6 +30,7 @@ namespace WebsocketChat.Server.Contexts
             var adminUser = new User
             {
                 Id = adminUserId,
+                Nickname = "Admin",
                 UserName = "admin@mail.com",
                 Email = "admin@mail.com",
                 NormalizedUserName = "ADMIN@MAIL.COM",

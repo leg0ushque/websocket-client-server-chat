@@ -12,7 +12,7 @@ using WebsocketChat.Server.Contexts;
 namespace WebsocketChat.Server.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    [Migration("20241205161013_InitialCreate")]
+    [Migration("20241207171855_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -280,6 +280,9 @@ namespace WebsocketChat.Server.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Nickname")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -324,15 +327,16 @@ namespace WebsocketChat.Server.Migrations
                         {
                             Id = "admin-user-id",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "41287404-ec50-4ba6-8587-0c24d41d4408",
+                            ConcurrencyStamp = "204239f5-66cd-4284-b355-e978014afb04",
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
+                            Nickname = "Admin",
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIUvhulhyepWRW3fX46UfDl/+8W4nEUs4Hc7Qg32FC9TJ+/Mt8HxTl0TYBdDo6Zk5w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEhpGvbHedIThR4d+VYfvPqCpfdYDfDcOLpuJd4geHlogVHVT3aUZVXXBo2GnbgFUg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2db79360-0284-4765-b7e5-417306cb08b1",
+                            SecurityStamp = "0b8e51c7-82f9-4995-b54d-9bd268e01086",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });

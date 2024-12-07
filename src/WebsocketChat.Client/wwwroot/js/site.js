@@ -1,10 +1,4 @@
-﻿const SENT = "sent", RECEIVED = "received";
-
-document.getElementById('chat-form').addEventListener('submit', function (event) {
-    event.preventDefault();  // Prevent the form from submitting in the traditional way.
-    sendMessage();
-});
-
+﻿const SENT = "sent", RECEIVED = "received", ERROR = "error";
 
 function createMessageElement(messageType, text, time) {
     const messageDiv = document.createElement('div');
@@ -36,8 +30,24 @@ function getCurrentTime() {
     return `${hours}:${minutes}`;
 }
 
+function appendMessage(messageType, text) {
+    let messageToAdd = createMessageElement(messageType, text, getCurrentTime())
+    messages.appendChild(messageToAdd);
+    scrollToLastMessage();
+}
+
 function scrollToLastMessage() {
     const messagesContainer = document.querySelector('.conversation-container');
     const lastMessage = messagesContainer.lastElementChild;
     lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function showToast(message) {
+    let toast = $('#toast');
+    toast.text(message);
+    toast.addClass('show');
+
+    setTimeout(function () {
+        toast.removeClass('show');
+    }, 3000);
 }

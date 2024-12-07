@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebsocketChat.Server.Models
+namespace WebsocketChat.Library.Models
 {
     public class RegisterModel
     {
@@ -10,7 +10,7 @@ namespace WebsocketChat.Server.Models
         public string Email { get; set; }
 
         [Display(Name = "Никнейм")]
-        public string Username { get; set; }
+        public string Nickname { get; set; }
 
         [Required(ErrorMessage = "Обязательно для заполнения")]
         [DataType(DataType.Password)]

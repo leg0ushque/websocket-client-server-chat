@@ -1,4 +1,10 @@
-﻿
+﻿@{
+    var isAdmin = User.IsInRole("Admin");
+    var claimType = "given_name";
+    var isSignedIn = User?.Identity?.IsAuthenticated ?? false;
+    var username = !isSignedIn ? null : User?.Claims.FirstOrDefault(claim => claim.Type == claimType)?.Value;
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,29 +17,60 @@
           integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
 </head>
 <body>
-    <div class="chat">
-        <div class="chat-container">
-            <div class="user-bar">
-                @* <div class="back">
-                    <i class="zmdi zmdi-arrow-left"></i>
-                </div> *@
-                <div class="name">
-                    <span>Веб-сокет чат</span>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-toggleable-lg navbar-dark bg-gradient box-shadow" id="mainNavbar">
+            <div class="container">
+                <a asp-action="Index" asp-controller="Home" class="navbar-brand nav-link text-light">
+                    <span><b>Веб-сокет чат</b></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="leftButtonsNav" class="navbar-collapse collapse d-lg-inline-flex flex-md-row">
+                    <!--LEFT BUTTONS-->
                 </div>
-                <div class="account">
-                    <span>Неопознанная коала </span>
-                    <span class="status">выйти</span>
+                <div id="rightButtonsNav" class="navbar-collapse collapse d-lg-inline-flex flex-md-row-reverse">
+                    <!--RIGHT BUTTONS-->
+                    <ul class="navbar-nav flex-grow-1-reverse">
+
+                        @if (!User.Identity.IsAuthenticated)
+                        {
+                            @await Html.PartialAsync("_HeaderButton", ("Register", "Auth", "user-plus", "Регистрация", "nav-link text-light"))
+                            @await Html.PartialAsync("_HeaderButton", ("Login", "Auth", "sign-in-alt", "Вход", "nav-link text-light"))
+                        }
+                        else
+                        {
+                            <a class="nav-link text-light">
+                                <span>@username</span>
+                            </a>
+                            <form asp-controller="Auth" asp-action="LogOff" method="post" id="logoutForm" asp-antiforgery="true">
+                                <a class="nav-link text-light" id="logOutHeaderBtn" href="#">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Выйти</span>
+                                </a>
+                            </form>
+                        }
+                    </ul>
                 </div>
-                @* <div class="actions more">
-                <i class="zmdi zmdi-more-vert"></i>
-                </div> *@
             </div>
-            @RenderBody()
-        </div>
-    </div>
-    @await RenderSectionAsync("Scripts", required: false)
+        </nav>
+    </header>
+
+    @RenderBody()
+
+    <div id="toast" class="toast"></div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#logOutHeaderBtn').on('click', function () {
+                $('#logoutForm').submit();
+            });
+        });
+    </script>
 </body>
 </html>

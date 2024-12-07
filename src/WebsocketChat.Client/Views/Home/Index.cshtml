@@ -1,8 +1,23 @@
 ﻿@{
     ViewData["Title"] = "Веб-сокет чат";
+
+    var claimType = "given_name";
+    var isSignedIn = User?.Identity?.IsAuthenticated ?? false;
+    var username = !isSignedIn ? null : User?.Claims.FirstOrDefault(claim => claim.Type == claimType)?.Value;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="text-center">
+        <h1 class="display-4">Добро пожаловать в веб-сокет чат!</h1>
+        <p><i>Мгновенные сообщения в один клик!</i></p>
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            <br />
+            <br />
+            <h3>Рады видеть Вас снова, @username!</h3>
+
+            <a class="btn btn-success" asp-controller="Chat">Войти в чат</a>
+        }
+    </div>
 </div>

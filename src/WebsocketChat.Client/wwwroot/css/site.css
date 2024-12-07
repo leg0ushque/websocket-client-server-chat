@@ -1,23 +1,59 @@
-*, *:before, *:after {
-    box-sizing: inherit;
+:root {
+    --whatsapp-green: #005e54;
+    --whatsapp-dark-green: #005e52;
+    --whatsapp-light-green: #038a7c;
+    --chat-input-height: 50px;
 }
 
-html {
-    box-sizing: border-box;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+/* Color styles */
+
+nav {
+    background-color: #005e54;
+}
+
+body button, .btn {
+    background-color: var(--whatsapp-green);
+    border-color: var(--whatsapp-green);
+}
+
+body button:hover, .btn:hover {
+    background-color: var(--whatsapp-light-green);
+    border-color: var(--whatsapp-dark-green);
 }
 
 body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-family: "Roboto", sans-serif;
     margin: 0;
-    padding: 0;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: "Roboto", sans-serif;
     background: url("~/../../img/chat-background.jpg") repeat;
-    z-index: 0;
+}
+
+header, footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.chat {
+    flex: 1;
+    margin-top: 60px;
+    margin-bottom: 60px;
+    overflow-y: auto;
 }
 
 /* Chat */
@@ -40,8 +76,6 @@ body {
     padding: 0 8px;
     font-size: 24px;
     width:100%;
-    position:fixed;
-    top:0;
     z-index: 1;
 }
 
@@ -58,42 +92,37 @@ body {
     top: 50%;
 }
 
-.user-bar .actions {
-    float: right;
-    margin: 0 0 0 20px;
-}
-
-.user-bar .actions.more {
-    margin: 0 12px 0 32px;
-}
-
-.user-bar .actions.attachment {
-    margin: 0 0 0 30px;
-}
-
-.user-bar .actions.attachment i {
-    display: block;
-    transform: rotate(-45deg);
-}
-
-.user-bar .avatar {
-    margin: 0 0 0 5px;
-    width: 36px;
-    height: 36px;
-}
-
-.user-bar .avatar img {
-    border-radius: 50%;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
-    display: block;
-    width: 100%;
-}
-
 .user-bar .name {
     font-size: 17px;
     font-weight: 600;
     text-overflow: ellipsis;
     letter-spacing: 0.3px;
+    margin: 0 0 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.user-bar .enter-chat {
+    font-size: 17px;
+    text-overflow: ellipsis;
+    letter-spacing: 0.3px;
+    margin: 0 0 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: #005e54;
+}
+
+.user-bar .bar-button {
+    float: right;
+    text-overflow: ellipsis;
+    margin: 0 0 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.user-bar .bar-button-right {
+    right:0;
+    text-overflow: ellipsis;
     margin: 0 0 0 8px;
     overflow: hidden;
     white-space: nowrap;
@@ -143,13 +172,12 @@ body {
 }
 
 .conversation .conversation-container {
-    box-shadow: inset 0 10px 10px -10px #000000;
     overflow-x: hidden;
     overflow-y: scroll;
     padding: 0 16px;
     margin-bottom: 5px;
     position: relative;
-    height: calc(100% - 25px); /* Adjust height to account for the user bar */
+    height: calc(100% - 25px);
 }
 
 .conversation form {
@@ -236,6 +264,18 @@ body {
     margin: 16px 0 8px;
 }
 
+.message.error {
+    background: #d8a7a7;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 5px 5px 5px 5px;
+    text-align: center;
+    font-size: 20pt;
+}
+.message.error::after {
+    border-style: none;
+}
+
 .message.received {
     background: #fff;
     border-radius: 0px 5px 5px 5px;
@@ -259,12 +299,12 @@ body {
     float: right;
 }
 
-    .message.sent:after {
-        border-width: 0px 0 10px 10px;
-        border-color: transparent transparent transparent #e1ffc7;
-        top: 0;
-        right: -10px;
-    }
+.message.sent:after {
+    border-width: 0px 0 10px 10px;
+    border-color: transparent transparent transparent #e1ffc7;
+    top: 0;
+    right: -10px;
+}
 
 /* Compose */
 
@@ -273,7 +313,7 @@ body {
     flex-direction: row;
     align-items: flex-end;
     overflow: hidden;
-    height: 50px;
+    height: var(--chat-input-height);
     width: 100%;
     z-index: 2;
 }
@@ -302,7 +342,7 @@ body {
         font-size: 16px;
         margin: 0;
         outline: none;
-        min-width: 50px;
+        min-width: var(--chat-input-height);
     }
 
     .conversation-compose .photo {
@@ -404,4 +444,76 @@ body {
         .conversation .conversation-container {
             height: calc(100vh - 120px);
         }
+}
+
+/* Toast message */
+.toast {
+    visibility: hidden; /* Hidden by default */
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: var(--whatsapp-light-green);
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    font-size: 17px;
+}
+
+/* Show the toast, change visibility to visible and add fade-in effect */
+.show {
+    visibility: visible;
+    -webkit-animation: fadeInBottom 0.5s, fadeOutBottom 2.5s 2.5s;
+    animation: fadeInBottom 0.5s, fadeOutBottom 2.5s 2.5s;
+}
+
+@-webkit-keyframes fadeInBottom {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInBottom {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes fadeOutBottom {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOutBottom {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
 }

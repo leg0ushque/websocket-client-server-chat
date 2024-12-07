@@ -1,0 +1,8 @@
+﻿@model (string, string, string, string, string)
+
+@*action, controller, icon_name, text, htmlClass*@
+
+<a asp-action="@Model.Item1" asp-controller="@Model.Item2" class="nav-link text-light">
+    <i class="fas fa-@Model.Item3"></i>
+    <span>@Model.Item4</span>
+</a>

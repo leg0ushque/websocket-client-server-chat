@@ -2,53 +2,109 @@
     ViewData["Title"] = "Чат";
 }
 
-<div class="conversation">
-    <div id="messages" class="conversation-container">
-    </div>
-    <form id="chat-form" class="conversation-compose">
-        <input class="input-msg" id="message-input" name="input"
-            placeholder="Введите сообщение" autocomplete="off" required></input>
-        <button type="submit" class="send">
-            <div class="circle">
-                <i class="far fa-paper-plane"></i>
+
+<div class="chat">
+    <div class="chat-container">
+        <div class="conversation">
+            <div id="messages" class="conversation-container">
             </div>
-        </button>
-    </form>
+        </div>
+    </div>
 </div>
+
+<footer class="text-center text-lg-start bg-light text-muted" id="mainPageFooter">
+    <section class="">
+
+        <form id="chat-form" class="conversation-compose">
+            <input class="input-msg" id="message-input" name="input"
+                   placeholder="Введите сообщение" autocomplete="off" required></input>
+            <button type="submit" class="send">
+                <div class="circle">
+                    <i class="far fa-paper-plane"></i>
+                </div>
+            </button>
+        </form>
+    </section>
+</footer>
 
 @section Scripts {
     <script>
-        let socket = new WebSocket("ws://localhost:5000/ws");
-        const messages = document.getElementById("messages");
+        $(document).ready(function () {
+            connectWebSocket();
+        });
 
-        socket.onmessage = function (event) {
-            let messageToAdd = createMessageElement(RECEIVED, event.data, getCurrentTime())
-            messages.appendChild(messageToAdd);
-            scrollToLastMessage();
-        };
+        function connectWebSocket() {
+            let socket = new WebSocket("ws://localhost:5000/ws");
 
-        function sendMessage() {
+            socket.onopen = function () {
+                // let handshakeMessage = { messageType: 0, userId: "", messageText: "hello!" }
+                // socket.send(JSON.stringify(handshakeMessage));
+            };
+
+            socket.onmessage = function (event) {
+                if(event.data == "connected")
+                {
+                    showToast('Соединение установлено!');
+                }
+
+                appendMessage(RECEIVED, event.data);
+            };
+
+            socket.onclose = function (event) {
+                let reason = event.reason ? `, причина=${event.reason}` : '';
+                let text = `Соединение закрыто чисто, код=${event.code}${reason}`;
+                appendMessage(ERROR, text);
+                console.error(text);
+
+                if (event.wasClean) {
+                    alert('Соединение закрыто чисто');
+                } else {
+                    alert('Соединение прервано');
+                }
+            };
+
+            socket.onerror = function (error) {
+                appendMessage(ERROR, error.message);
+                console.error(`[Ошибка] ${error.message}`);
+            };
+
+            $('#chat-form').submit(function (event) {
+                event.preventDefault();
+                sendMessage(socket);
+            });
+        }
+
+        function sendMessage(socket) {
             let messageInput = document.getElementById("message-input");
             socket.send(messageInput.value);
 
-            let messageToAdd = createMessageElement(SENT, messageInput.value, getCurrentTime())
-            messages.appendChild(messageToAdd);
-            scrollToLastMessage();
+            appendMessage(SENT, messageInput.value);
 
             messageInput.value = '';
         }
 
+        let socket = new WebSocket("ws://localhost:5000/ws");
+        const messages = document.getElementById("messages");
+
+        socket.onmessage = function (event) {
+            appendMessage(RECEIVED, event.data);
+        };
+
         socket.onclose = function (event) {
+            let text = `Соединение закрыто чисто, код=${event.code}, причина=${event.reason}`;
+            appendMessage(ERROR, text);
+            console.error(text);
+
             if (event.wasClean) {
-                alert(`Соединение закрыто чисто, код=${event.code}, причина=${event.reason}`);
+                alert();
             } else {
                 alert('Соединение прервано');
             }
         };
 
         socket.onerror = function (error) {
-            alert(`[Ошибка] ${error.message}`);
-            debugger;
+            appendMessage(ERROR, error.message)
+            console.log(`[Ошибка] ${error.message}`);
         };
     </script>
 }

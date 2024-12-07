@@ -1,0 +1,75 @@
+﻿@model WebsocketChat.Library.Models.RegisterModel
+
+@{
+    ViewBag.Title = "Регистрация";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>@ViewBag.Title</h2>
+            <br />
+            <form asp-action="Register" asp-controller="Auth" method="post" class="form-horizontal" role="form" asp-antiforgery="true">
+
+                <div asp-validation-summary="ModelOnly" class="text-danger" id="validationSummary"></div>
+
+                <div class="form-group row pb-3">
+                    <label asp-for="Nickname" class="col-md-4 control-label"></label>
+                    <div class="col-md-8">
+                        <input asp-for="Nickname" class="form-control" placeholder="Никнейм" />
+                        <span asp-validation-for="Nickname" class="text-danger inputError"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row pb-3">
+                    <label asp-for="Email" class="col-md-4 control-label"></label>
+                    <div class="col-md-8">
+                        <input asp-for="Email" class="form-control" placeholder="Email" />
+                        <span asp-validation-for="Email" class="text-danger inputError"></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-secondary">
+                    Пароль должен иметь минимум 6 символов, среди которых должна быть<br />
+                    хотя бы одна заглавная и одна прописная буквы, <br />
+                    а также не буквенно-цифровой символ.
+                </div>
+
+                <div class="form-group row pb-3">
+                    <label asp-for="Password" class="col-md-4 control-label"></label>
+                    <div class="col-md-8">
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Пароль" />
+                        <span asp-validation-for="Password" class="text-danger inputError"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row pb-3">
+                    <label asp-for="ConfirmPassword" class="col-md-4 control-label"></label>
+                    <div class="col-md-8">
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Повтор пароля" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger inputError"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row pb-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary btn-block" id="registerBtn">Зарегистрироваться</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Уже зарегистрированы?</h2>
+            <br />
+            <div class="d-flex justify-content-center">
+                <a asp-action="Login" asp-controller="Auth" class="btn btn-primary col-md-8">Войти в аккаунт</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

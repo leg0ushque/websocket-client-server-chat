@@ -2,30 +2,24 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
+using WebsocketChat.Library.Models;
 using WebsocketChat.Server.Identity;
-using WebsocketChat.Server.Models;
 using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server.Controllers
 {
     [Route("[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController(
+        SignInManager<User> signInManager,
+        UserManager<User> userManager,
+        JwtTokenService jwtTokenService) : ControllerBase
     {
-        private readonly SignInManager<User> _signInManager;
-        private readonly UserManager<User> _userManager;
-        private readonly JwtTokenService _jwtTokenService;
-
-        public AuthController(
-            SignInManager<User> signInManager,
-            UserManager<User> userManager,
-            JwtTokenService jwtTokenService)
-        {
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _jwtTokenService = jwtTokenService;
-        }
+        private readonly SignInManager<User> _signInManager = signInManager;
+        private readonly UserManager<User> _userManager = userManager;
+        private readonly JwtTokenService _jwtTokenService = jwtTokenService;
 
         /// <summary>
         /// Registers a new user.
@@ -41,7 +35,8 @@ namespace WebsocketChat.Server.Controllers
 
             var user = new User
             {
-                UserName = model.Username,
+                Nickname = model.Nickname,
+                UserName = model.Email,
                 Email = model.Email,
             };
 
@@ -172,10 +167,6 @@ namespace WebsocketChat.Server.Controllers
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, Identity.IdentityConstants.UserRole);
-
-                // TODO FIX ME
-                // Create other entities if needed
-                // await _usersService.CreateCustomerAsync(new BusinessLogic.Dtos.CustomerDto { CustomerCategoryId = null, UserId = user.Id });
 
                 var roles = await _userManager.GetRolesAsync(user);
                 return Ok(_jwtTokenService.GetToken(user, roles));

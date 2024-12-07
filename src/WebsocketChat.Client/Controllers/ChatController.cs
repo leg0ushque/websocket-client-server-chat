@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using WebsocketChat.Client.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebsocketChat.Client.Controllers
 {
@@ -9,6 +8,7 @@ namespace WebsocketChat.Client.Controllers
     {
         public ChatController() { }
 
+        [Authorize]
         [HttpGet("")]
         public IActionResult Index()
         {

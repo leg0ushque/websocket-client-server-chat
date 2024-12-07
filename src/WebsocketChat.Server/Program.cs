@@ -18,7 +18,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WebsocketChat.Server.Contexts;
+using WebsocketChat.Server.Handlers;
 using WebsocketChat.Server.Identity;
+using WebsocketChat.Server.Middlewares;
 using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server
@@ -55,28 +57,7 @@ namespace WebsocketChat.Server
 
             app.UseWebSockets();
 
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Path != "/ws")
-                {
-                    await next();
-                }
-                else
-                {
-                    if (!context.WebSockets.IsWebSocketRequest)
-                    {
-                        context.Response.StatusCode = 400; // Bad Request
-                        await context.Response.WriteAsync("Not a WebSocket request");
-                        return;
-                    }
-
-                    WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-
-                    var manager = context.RequestServices.GetRequiredService<WebSocketConnectionManager>();
-
-                    await HandleWebsocketRequestAsync(webSocket, manager);
-                }
-            });
+            app.UseMiddleware<Middlewares.WebSocketMiddleware>();
 
             app.UseSwagger();
             app.UseSwaggerUI(options =>
@@ -156,6 +137,7 @@ namespace WebsocketChat.Server
             // Websocket services
 
             services.AddSingleton<WebSocketConnectionManager>();
+            services.AddSingleton<IMessageHandler, MessageHandler>();
 
             services.AddWebSockets(options =>
             {
@@ -203,40 +185,6 @@ namespace WebsocketChat.Server
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 options.IncludeXmlComments(xmlPath);
             });
-        }
-
-        private static async Task HandleWebsocketRequestAsync(WebSocket webSocket, WebSocketConnectionManager manager,
-            CancellationToken ct = default)
-        {
-            var buffer = new byte[1024 * 4];
-            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
-
-            manager.AddSocket(webSocket);
-
-            while (!result.CloseStatus.HasValue)
-            {
-                var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
-                foreach (var connectedClient in manager.GetAllClients())
-                {
-                    if (connectedClient.Value.State == WebSocketState.Open)
-                    {
-                        await connectedClient.Value.SendAsync(
-                            new ArraySegment<byte>(buffer, 0, result.Count),
-                            result.MessageType,
-                            result.EndOfMessage,
-                            ct);
-                    }
-                }
-
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
-            }
-
-            string id = manager.GetId(webSocket);
-            if (id != null)
-            {
-                await manager.RemoveSocketAsync(id, ct);
-            }
         }
     }
 }
