@@ -1,51 +1,87 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using WebsocketChat.Library.Entities;
+using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server.Handlers
 {
     public class MessageHandler : IMessageHandler
     {
-        //private readonly JwtTokenService _jwtTokenService;
-        //public MessageHandler(JwtTokenService jwtTokenService)
-        //{
-        //    _jwtTokenService = jwtTokenService;
-        //}
+        private readonly JwtTokenService _jwtTokenService;
+        private readonly UserService _userService;
+        private readonly IWebSocketTokenValidationService _webSocketTokenValidationService;
+
+        public MessageHandler(
+            JwtTokenService jwtTokenService,
+            UserService userService,
+            IWebSocketTokenValidationService webSocketTokenValidationService)
+        {
+            _jwtTokenService = jwtTokenService;
+            _userService = userService;
+            _webSocketTokenValidationService = webSocketTokenValidationService;
+        }
 
         public async Task HandleMessageAsync(WebSocket webSocket, WebSocketConnectionManager manager,
             CancellationToken ct = default)
         {
             var buffer = new byte[1024 * 4];
-            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
 
-            manager.AddSocket(webSocket);
-
-            while (!result.CloseStatus.HasValue)
+            try
             {
-                var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
-                foreach (var connectedClient in manager.GetAllClients())
+                while (webSocket.State == WebSocketState.Open)
                 {
-                    if (connectedClient.Value.State == WebSocketState.Open)
+                    WebSocketReceiveResult result;
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
+
+                    if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        await connectedClient.Value.SendAsync(
-                            new ArraySegment<byte>(buffer, 0, result.Count),
-                            result.MessageType,
-                            result.EndOfMessage,
-                            ct);
+                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, ct);
+                        break;
+                    }
+
+                    var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    var deserializedMessage = JsonConvert.DeserializeObject<WebSocketMessage>(receivedMessage);
+
+                    var wsTokenIsValid = await _webSocketTokenValidationService.ValidateAsync(
+                        deserializedMessage.Token,
+                        deserializedMessage.UserId);
+
+                    if(!wsTokenIsValid)
+                    {
+                        return;
+                    }
+
+                    if (deserializedMessage.IsSystemMessage)
+                    {
+
+                    }
+
+                    foreach (var connectedClient in manager.GetAllClients())
+                    {
+                        if (connectedClient.Value.State == WebSocketState.Open)
+                        {
+                            await connectedClient.Value.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count),
+                                result.MessageType, result.EndOfMessage, ct);
+                        }
                     }
                 }
-
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
             }
-
-            string id = manager.GetId(webSocket);
-
-            if (id != null)
+            catch (Exception ex)
             {
-                await manager.RemoveSocketAsync(id, ct);
+                Console.WriteLine($"WebSocket handling error: {ex.Message}");
+            }
+            finally
+            {
+                // Cleanup code
+                var id = manager.GetId(webSocket);
+                if (id != null)
+                {
+                    await manager.RemoveSocketAsync(id, ct);
+                }
             }
         }
     }

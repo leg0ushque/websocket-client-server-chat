@@ -1,7 +1,6 @@
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +11,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
-using System.Net.WebSockets;
 using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using WebsocketChat.Server.Contexts;
 using WebsocketChat.Server.Handlers;
 using WebsocketChat.Server.Identity;
-using WebsocketChat.Server.Middlewares;
 using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server
@@ -121,6 +116,21 @@ namespace WebsocketChat.Server
 
             services.AddScoped<JwtTokenService>();
 
+            // Services
+
+            services.AddSingleton<WebSocketConnectionManager>();
+            services.AddScoped<IMessageHandler, MessageHandler>();
+            services.AddScoped<UserService>();
+            services.AddTransient<IWebSocketTokenService, WebSocketTokenService>();
+            services.AddTransient<IWebSocketTokenValidationService, WebSocketTokenService>();
+
+            services.AddHttpContextAccessor();
+
+            services.AddWebSockets(options =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+            });
+
             // CORS
 
             services.AddCors(options =>
@@ -132,16 +142,6 @@ namespace WebsocketChat.Server
                                              .AllowAnyHeader()
                                              .AllowAnyMethod();
                                   });
-            });
-
-            // Websocket services
-
-            services.AddSingleton<WebSocketConnectionManager>();
-            services.AddSingleton<IMessageHandler, MessageHandler>();
-
-            services.AddWebSockets(options =>
-            {
-                options.KeepAliveInterval = TimeSpan.FromSeconds(120);
             });
 
             // Other

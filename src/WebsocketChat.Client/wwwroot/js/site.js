@@ -51,3 +51,7 @@ function showToast(message) {
         toast.removeClass('show');
     }, 3000);
 }
+function getTokenFromCookies(cookieName) {
+    let token = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
+    return token ? token.split('=')[1] : null;
+}

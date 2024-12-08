@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WebsocketChat.Client.Helpers;
 using WebsocketChat.Client.HttpClients;
 using WebsocketChat.Library.Models;
@@ -31,13 +32,10 @@ namespace WebsocketChat.Client.Controllers
             var response = await _api.PostUsersRegister(content);
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
+                var stringResponse = await response.Content.ReadAsStringAsync();
+                var responseModel = JsonConvert.DeserializeObject<AuthResultModel>(stringResponse);
 
-                HttpContext.Response.Cookies.Append(RequestHelper.JwtCookiesKey, token, new CookieOptions
-                {
-                    HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
-                });
+                SetTokenCookies(responseModel.JwtToken, responseModel.WebSocketToken);
 
                 return RedirectToAction("Index", "Home");
             }
@@ -65,13 +63,10 @@ namespace WebsocketChat.Client.Controllers
             var response = await _api.PostUsersLogin(content);
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
+                var stringResponse = await response.Content.ReadAsStringAsync();
+                var responseModel = JsonConvert.DeserializeObject<AuthResultModel>(stringResponse);
 
-                HttpContext.Response.Cookies.Append(RequestHelper.JwtCookiesKey, token, new CookieOptions
-                {
-                    HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
-                });
+                SetTokenCookies(responseModel.JwtToken, responseModel.WebSocketToken);
 
                 return RedirectToAction("Index", "Home");
             }
@@ -86,7 +81,9 @@ namespace WebsocketChat.Client.Controllers
         public async Task<ActionResult> LogOff()
         {
             await _api.GetUsersLogout();
+
             Response.Cookies.Delete(RequestHelper.JwtCookiesKey);
+            Response.Cookies.Delete(Library.Constants.WebSocketSessionTokenKey);
 
             return RedirectToAction("Index", "Home");
         }
@@ -112,15 +109,12 @@ namespace WebsocketChat.Client.Controllers
             var response = await _api.PostUsersChangePassword(content);
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
+                var stringResponse = await response.Content.ReadAsStringAsync();
+                var responseModel = JsonConvert.DeserializeObject<AuthResultModel>(stringResponse);
 
                 Response.Cookies.Delete(RequestHelper.JwtCookiesKey);
 
-                HttpContext.Response.Cookies.Append(RequestHelper.JwtCookiesKey, token, new CookieOptions
-                {
-                    HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
-                });
+                SetTokenCookies(responseModel.JwtToken, responseModel.WebSocketToken);
 
                 return RedirectToAction("", "Profile");
             }
@@ -128,6 +122,23 @@ namespace WebsocketChat.Client.Controllers
             var responseContent = await JsonHelper.DeserializeContentAsync<ErrorModel>(response);
             ModelState.AddModelError(responseContent.ErrorAttribute, responseContent.ErrorMessage);
             return View(model);
+        }
+
+        private void SetTokenCookies(string jwtToken, string webSocketToken)
+        {
+            HttpContext.Response.Cookies.Append(RequestHelper.JwtCookiesKey, jwtToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
+                });
+
+            HttpContext.Response.Cookies.Append(Library.Constants.WebSocketSessionTokenKey, webSocketToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
+                });
         }
     }
 }

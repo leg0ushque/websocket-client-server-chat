@@ -1,7 +1,7 @@
-﻿@{
+﻿@model WebsocketChat.Client.Models.WebsocketChatModel
+@{
     ViewData["Title"] = "Чат";
 }
-
 
 <div class="chat">
     <div class="chat-container">
@@ -30,81 +30,41 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            connectWebSocket();
-        });
+            const wsUrl = "ws://localhost:5000/ws"; //$('body').data('ws-url');
 
-        function connectWebSocket() {
-            let socket = new WebSocket("ws://localhost:5000/ws");
+            debugger;
+            if (!("WebSocket" in window)) {
+                showToast("WebSocket NOT supported by your Browser!");
+                return;
+            }
 
-            socket.onopen = function () {
-                // let handshakeMessage = { messageType: 0, userId: "", messageText: "hello!" }
-                // socket.send(JSON.stringify(handshakeMessage));
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = function (event) {
+                debugger;
+                let handshakeMessage = {
+                    messageType: 1,
+                    userId: '@Model.UserId',
+                    token: '@Model.WebsocketToken',
+                    messageText: ""
+                };
+
+                socket.send(JSON.stringify(handshakeMessage));
             };
 
             socket.onmessage = function (event) {
-                if(event.data == "connected")
-                {
-                    showToast('Соединение установлено!');
-                }
-
-                appendMessage(RECEIVED, event.data);
-            };
-
-            socket.onclose = function (event) {
-                let reason = event.reason ? `, причина=${event.reason}` : '';
-                let text = `Соединение закрыто чисто, код=${event.code}${reason}`;
-                appendMessage(ERROR, text);
-                console.error(text);
-
-                if (event.wasClean) {
-                    alert('Соединение закрыто чисто');
-                } else {
-                    alert('Соединение прервано');
-                }
+                console.log('Message from server ', event.data);
             };
 
             socket.onerror = function (error) {
-                appendMessage(ERROR, error.message);
-                console.error(`[Ошибка] ${error.message}`);
+                let errorMessage = 'WebSocket Error: ' + error;
+                console.error(errorMessage)
+                showToast(errorMessage)
             };
 
-            $('#chat-form').submit(function (event) {
-                event.preventDefault();
-                sendMessage(socket);
-            });
-        }
-
-        function sendMessage(socket) {
-            let messageInput = document.getElementById("message-input");
-            socket.send(messageInput.value);
-
-            appendMessage(SENT, messageInput.value);
-
-            messageInput.value = '';
-        }
-
-        let socket = new WebSocket("ws://localhost:5000/ws");
-        const messages = document.getElementById("messages");
-
-        socket.onmessage = function (event) {
-            appendMessage(RECEIVED, event.data);
-        };
-
-        socket.onclose = function (event) {
-            let text = `Соединение закрыто чисто, код=${event.code}, причина=${event.reason}`;
-            appendMessage(ERROR, text);
-            console.error(text);
-
-            if (event.wasClean) {
-                alert();
-            } else {
-                alert('Соединение прервано');
-            }
-        };
-
-        socket.onerror = function (error) {
-            appendMessage(ERROR, error.message)
-            console.log(`[Ошибка] ${error.message}`);
-        };
+            socket.onclose = function (event) {
+                console.log('WebSocket connection closed: ', event);
+            };
+        });
     </script>
 }

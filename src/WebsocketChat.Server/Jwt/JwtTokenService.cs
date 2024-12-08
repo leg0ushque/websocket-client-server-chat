@@ -1,19 +1,17 @@
-﻿using System;
+﻿using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using WebsocketChat.Server.Identity;
 
 namespace WebsocketChat.Server.Services
 {
     public class JwtTokenService
     {
-        private const int DaysExpirationTerm = 50;
         private readonly JwtTokenOptions _settings;
 
         public JwtTokenService(IOptions<JwtTokenOptions> options)
@@ -49,7 +47,7 @@ namespace WebsocketChat.Server.Services
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSecretKey)),
                     SecurityAlgorithms.HmacSha256),
                 claims: userClaims,
-                expires: DateTime.Now.AddDays(DaysExpirationTerm));
+                expires: DateTime.Now.AddDays(Constants.TokenDaysExpirationTerm));
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
@@ -59,10 +57,48 @@ namespace WebsocketChat.Server.Services
         public bool ValidateToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
+
             try
             {
-                tokenHandler.ValidateToken(
-                token,
+                _ = HandleTokenValidation(tokenHandler, token);
+            }
+            catch (SecurityTokenException)
+            {
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public string GetUserIdFromValidatedToken(string tokenToValidate)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                var securityToken = HandleTokenValidation(tokenHandler, tokenToValidate);
+                var jwtToken = (JwtSecurityToken)securityToken;
+                var userId = jwtToken.Claims.First(c => c.Type == Identity.IdentityConstants.UserIdClaimType).Value;
+
+                return userId;
+            }
+            catch (SecurityTokenException)
+            {
+                return null;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        public SecurityToken HandleTokenValidation(JwtSecurityTokenHandler tokenHandler, string token)
+        {
+            tokenHandler.ValidateToken(token,
                 new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -84,18 +120,9 @@ namespace WebsocketChat.Server.Services
                         },
                     RequireExpirationTime = true,
                 },
-                out var _);
-            }
-            catch (SecurityTokenException)
-            {
-                return false;
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
+                out var claimsPrincipal);
 
-            return true;
+            return claimsPrincipal;
         }
     }
 }

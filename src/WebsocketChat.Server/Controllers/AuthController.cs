@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using WebsocketChat.Library.Models;
@@ -15,11 +14,15 @@ namespace WebsocketChat.Server.Controllers
     public class AuthController(
         SignInManager<User> signInManager,
         UserManager<User> userManager,
-        JwtTokenService jwtTokenService) : ControllerBase
+        JwtTokenService jwtTokenService,
+        IWebSocketTokenService websocketTokenService,
+        IHttpContextAccessor httpContextAccessor) : ControllerBase
     {
         private readonly SignInManager<User> _signInManager = signInManager;
         private readonly UserManager<User> _userManager = userManager;
         private readonly JwtTokenService _jwtTokenService = jwtTokenService;
+        private readonly IWebSocketTokenService _websocketTokenService = websocketTokenService;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         /// <summary>
         /// Registers a new user.
@@ -89,6 +92,8 @@ namespace WebsocketChat.Server.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Logout()
         {
+            RemoveCurrentWebSocketToken();
+
             await _signInManager.SignOutAsync();
 
             return Ok();
@@ -144,8 +149,14 @@ namespace WebsocketChat.Server.Controllers
                 return BadRequest(result.Errors);
             }
 
+            var webSocketToken = await _websocketTokenService.CreateAsync(user.Id);
+
             var roles = await _userManager.GetRolesAsync(user);
-            return Ok(_jwtTokenService.GetToken(user, roles));
+            return Ok(new AuthResultModel
+            {
+                JwtToken = _jwtTokenService.GetToken(user, roles),
+                WebSocketToken = webSocketToken,
+            });
         }
 
         private async Task<IActionResult> LoginUser(string login, string password)
@@ -155,7 +166,14 @@ namespace WebsocketChat.Server.Controllers
             {
                 var user = await _userManager.FindByNameAsync(login);
                 var roles = await _userManager.GetRolesAsync(user);
-                return Ok(_jwtTokenService.GetToken(user, roles));
+
+                var webSocketToken = await _websocketTokenService.CreateAsync(user.Id);
+
+                return Ok(new AuthResultModel
+                {
+                    JwtToken = _jwtTokenService.GetToken(user, roles),
+                    WebSocketToken = webSocketToken,
+                });
             }
 
             return Forbid();
@@ -168,11 +186,28 @@ namespace WebsocketChat.Server.Controllers
             {
                 await _userManager.AddToRoleAsync(user, Identity.IdentityConstants.UserRole);
 
+                var webSocketToken = await _websocketTokenService.CreateAsync(user.Id);
+
                 var roles = await _userManager.GetRolesAsync(user);
-                return Ok(_jwtTokenService.GetToken(user, roles));
+
+                return Ok(new AuthResultModel
+                {
+                    JwtToken = _jwtTokenService.GetToken(user, roles),
+                    WebSocketToken = webSocketToken,
+                });
             }
 
             return BadRequest(result.Errors);
+        }
+
+        private void RemoveCurrentWebSocketToken()
+        {
+            var cookiesKey = Library.Constants.WebSocketSessionTokenKey;
+
+            if (_httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(cookiesKey))
+            {
+                _httpContextAccessor.HttpContext.Response.Cookies.Delete(cookiesKey);
+            }
         }
     }
 }

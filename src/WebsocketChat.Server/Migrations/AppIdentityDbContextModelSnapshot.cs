@@ -88,58 +88,6 @@ namespace WebsocketChat.Server.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("IdentityUser");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -204,7 +152,7 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "admin-user-id",
+                            UserId = "0c30bc96-3458-4be3-af4b-8edadafb6628",
                             RoleId = "1"
                         });
                 });
@@ -228,21 +176,26 @@ namespace WebsocketChat.Server.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("WebsocketChat.Library.Models.Message", b =>
+            modelBuilder.Entity("WebsocketChat.Library.Entities.WebSocketMessage", b =>
                 {
                     b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsSystemMessage")
+                        .HasColumnType("bit");
+
                     b.Property<string>("MessageText")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -250,6 +203,27 @@ namespace WebsocketChat.Server.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("WebsocketChat.Library.Entities.WebSocketToken", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WebSocketToken");
                 });
 
             modelBuilder.Entity("WebsocketChat.Server.Identity.User", b =>
@@ -322,18 +296,18 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "admin-user-id",
+                            Id = "0c30bc96-3458-4be3-af4b-8edadafb6628",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "204239f5-66cd-4284-b355-e978014afb04",
+                            ConcurrencyStamp = "a52c4888-eb70-45b8-8f7e-840e7bfe55e8",
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nickname = "Admin",
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEhpGvbHedIThR4d+VYfvPqCpfdYDfDcOLpuJd4geHlogVHVT3aUZVXXBo2GnbgFUg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDpesmqxoVSzDFN1H4c0GElHV+yi/RhrzA6QzSft2tlMeudrRTH1uFoeUG19VIBvog==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0b8e51c7-82f9-4995-b54d-9bd268e01086",
+                            SecurityStamp = "8ba622c7-c2d7-48a0-a7a4-a1d161687f27",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });
@@ -390,9 +364,18 @@ namespace WebsocketChat.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WebsocketChat.Library.Models.Message", b =>
+            modelBuilder.Entity("WebsocketChat.Library.Entities.WebSocketMessage", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("WebsocketChat.Server.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WebsocketChat.Library.Entities.WebSocketToken", b =>
+                {
+                    b.HasOne("WebsocketChat.Server.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

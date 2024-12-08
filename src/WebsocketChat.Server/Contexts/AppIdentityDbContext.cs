@@ -2,14 +2,14 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
-using WebsocketChat.Library.Models;
+using WebsocketChat.Library.Entities;
 using WebsocketChat.Server.Identity;
 
 namespace WebsocketChat.Server.Contexts
 {
     public class AppIdentityDbContext(DbContextOptions<AppIdentityDbContext> options) : IdentityDbContext<User>(options)
     {
-        public DbSet<Message> Messages { get; set; }
+        public DbSet<WebSocketMessage> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -26,10 +26,9 @@ namespace WebsocketChat.Server.Contexts
 
             // FIRST USER
 
-            var adminUserId = "admin-user-id";
             var adminUser = new User
             {
-                Id = adminUserId,
+                Id = Guid.NewGuid().ToString(),
                 Nickname = "Admin",
                 UserName = "admin@mail.com",
                 Email = "admin@mail.com",
@@ -49,15 +48,23 @@ namespace WebsocketChat.Server.Contexts
             builder.Entity<IdentityUserRole<string>>().HasData(new IdentityUserRole<string>
             {
                 RoleId = adminRoleId,
-                UserId = adminUserId
+                UserId = adminUser.Id
             });
 
             // Messages table
 
-            builder.Entity<Message>(entity =>
+            builder.Entity<WebSocketMessage>(entity =>
             {
                 entity.Property(m => m.MessageText).IsRequired().HasMaxLength(500);
-                entity.HasOne<IdentityUser>()
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(m => m.UserId)
+                    .IsRequired();
+            });
+
+            builder.Entity<WebSocketToken>(entity =>
+            {
+                entity.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(m => m.UserId)
                     .IsRequired();
