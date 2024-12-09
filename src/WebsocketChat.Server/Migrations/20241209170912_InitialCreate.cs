@@ -164,7 +164,6 @@ namespace WebsocketChat.Server.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IsSystemMessage = table.Column<bool>(type: "bit", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     MessageText = table.Column<string>(type: "nvarchar(2000)", maxLength: 500, nullable: false)
@@ -211,12 +210,12 @@ namespace WebsocketChat.Server.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Nickname", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "0c30bc96-3458-4be3-af4b-8edadafb6628", 0, "a52c4888-eb70-45b8-8f7e-840e7bfe55e8", "admin@mail.com", true, false, null, "Admin", "ADMIN@MAIL.COM", "ADMIN@MAIL.COM", "AQAAAAIAAYagAAAAEDpesmqxoVSzDFN1H4c0GElHV+yi/RhrzA6QzSft2tlMeudrRTH1uFoeUG19VIBvog==", null, false, "8ba622c7-c2d7-48a0-a7a4-a1d161687f27", false, "admin@mail.com" });
+                values: new object[] { "5bb2c97b-e059-419d-9f7c-1484ee9f6b43", 0, "74174e45-54c0-4a45-b958-d591849d14e6", "admin@mail.com", true, false, null, "Admin", "ADMIN@MAIL.COM", "ADMIN@MAIL.COM", "AQAAAAIAAYagAAAAEPpglDa6aZ9T9smdCIT7Je80ELSruzJvXyVuXObrTt2kT6O9Us/LXdqxh5B+LdrH3g==", null, false, "874eea46-8af3-4b60-8661-eefbba9bd643", false, "admin@mail.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
-                values: new object[] { "1", "0c30bc96-3458-4be3-af4b-8edadafb6628" });
+                values: new object[] { "1", "5bb2c97b-e059-419d-9f7c-1484ee9f6b43" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

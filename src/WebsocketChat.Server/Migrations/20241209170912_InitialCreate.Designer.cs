@@ -12,7 +12,7 @@ using WebsocketChat.Server.Contexts;
 namespace WebsocketChat.Server.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    [Migration("20241208190516_InitialCreate")]
+    [Migration("20241209170912_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -155,7 +155,7 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "0c30bc96-3458-4be3-af4b-8edadafb6628",
+                            UserId = "5bb2c97b-e059-419d-9f7c-1484ee9f6b43",
                             RoleId = "1"
                         });
                 });
@@ -187,9 +187,6 @@ namespace WebsocketChat.Server.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsSystemMessage")
-                        .HasColumnType("bit");
 
                     b.Property<string>("MessageText")
                         .IsRequired()
@@ -299,18 +296,18 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "0c30bc96-3458-4be3-af4b-8edadafb6628",
+                            Id = "5bb2c97b-e059-419d-9f7c-1484ee9f6b43",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a52c4888-eb70-45b8-8f7e-840e7bfe55e8",
+                            ConcurrencyStamp = "74174e45-54c0-4a45-b958-d591849d14e6",
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nickname = "Admin",
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDpesmqxoVSzDFN1H4c0GElHV+yi/RhrzA6QzSft2tlMeudrRTH1uFoeUG19VIBvog==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPpglDa6aZ9T9smdCIT7Je80ELSruzJvXyVuXObrTt2kT6O9Us/LXdqxh5B+LdrH3g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "8ba622c7-c2d7-48a0-a7a4-a1d161687f27",
+                            SecurityStamp = "874eea46-8af3-4b60-8661-eefbba9bd643",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });

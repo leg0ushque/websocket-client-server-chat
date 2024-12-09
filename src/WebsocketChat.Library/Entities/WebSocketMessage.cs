@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WebsocketChat.Library.Entities
 {
-    public class WebSocketMessage
+    public class WebSocketMessage : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -13,7 +13,7 @@ namespace WebsocketChat.Library.Entities
         [NotMapped]
         public string Token { get; set; }
 
-        [Required]
+        [NotMapped]
         public bool IsSystemMessage { get; set; } = false;
 
         [Required]
@@ -22,6 +22,9 @@ namespace WebsocketChat.Library.Entities
         [Required]
         [StringLength(450)]
         public string UserId { get; set; }
+
+        [NotMapped]
+        public string UserNickname { get; set; }
 
         [Required]
         [Column(TypeName = "nvarchar(2000)")]

@@ -3,10 +3,13 @@ namespace WebsocketChat.Client.HttpClients
 {
     public interface IApiHttpClient
     {
-        Task<HttpResponseMessage> GetUsersLogout();
-        Task<HttpResponseMessage> GetUsersValidateToken(string token);
-        Task<HttpResponseMessage> PostUsersChangePassword(StringContent content);
-        Task<HttpResponseMessage> PostUsersLogin(StringContent content);
-        Task<HttpResponseMessage> PostUsersRegister(StringContent content);
+        Task<HttpResponseMessage> GetAuthLogout();
+        Task<HttpResponseMessage> GetAuthValidateToken(string token);
+        Task<HttpResponseMessage> PostAuthChangePassword(StringContent content);
+        Task<HttpResponseMessage> PostAuthLogin(StringContent content);
+        Task<HttpResponseMessage> PostAuthRegister(StringContent content);
+        Task<HttpResponseMessage> GetChatMessages(string userId = null,
+            int? pageNumber = Library.Constants.MinPageNumber,
+            int? pageSize = Library.Constants.MinPageSize);
     }
 }

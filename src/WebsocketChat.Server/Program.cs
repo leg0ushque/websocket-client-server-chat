@@ -129,6 +129,7 @@ namespace WebsocketChat.Server
             services.AddScoped<UserService>();
             services.AddTransient<IWebSocketTokenService, WebSocketTokenService>();
             services.AddTransient<IWebSocketTokenValidationService, WebSocketTokenService>();
+            services.AddTransient<IMessageStorageService, MessageStorageService>();
 
             services.AddHttpContextAccessor();
 

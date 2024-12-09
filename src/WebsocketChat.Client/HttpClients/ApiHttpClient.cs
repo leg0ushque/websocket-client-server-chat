@@ -11,35 +11,50 @@ namespace WebsocketChat.Client.HttpClients
 
         // AUTH
 
-        public async Task<HttpResponseMessage> PostUsersLogin(StringContent content)
+        public async Task<HttpResponseMessage> PostAuthLogin(StringContent content)
         {
             var result = await Client.PostAsync(SetRequestPath("Auth/login"), content);
             return result;
         }
 
-        public async Task<HttpResponseMessage> GetUsersValidateToken(string token)
+        public async Task<HttpResponseMessage> GetAuthValidateToken(string token)
         {
             using var content = JsonHelper.ObjectToStringContent(token);
             var result = await Client.PostAsync(SetRequestPath("Auth/validate"), content);
             return result;
         }
 
-        public async Task<HttpResponseMessage> PostUsersRegister(StringContent content)
+        public async Task<HttpResponseMessage> PostAuthRegister(StringContent content)
         {
             var result = await Client.PostAsync(SetRequestPath("Auth/register"), content);
             return result;
         }
 
-        public async Task<HttpResponseMessage> PostUsersChangePassword(StringContent content)
+        public async Task<HttpResponseMessage> PostAuthChangePassword(StringContent content)
         {
             RequestHelper.SetRequestToken(Client, HttpContextAccessor);
             var result = await Client.PostAsync(SetRequestPath("Auth/changePassword"), content);
             return result;
         }
 
-        public async Task<HttpResponseMessage> GetUsersLogout()
+        public async Task<HttpResponseMessage> GetAuthLogout()
         {
             var result = await Client.GetAsync(SetRequestPath("Auth/logout"));
+            return result;
+        }
+
+        // Messages
+
+        public async Task<HttpResponseMessage> GetChatMessages(string userId = null,
+            int? pageNumber = Library.Constants.MinPageNumber,
+            int? pageSize = Library.Constants.MinPageSize)
+        {
+            var requestPath = string.IsNullOrEmpty(userId) ?
+                "Messages/all" : "Messages/own";
+            var queryParameters = $"?pageNumber={pageNumber}&pageSize={pageSize}";
+
+            RequestHelper.SetRequestToken(Client, HttpContextAccessor);
+            var result = await Client.GetAsync(SetRequestPath(requestPath + queryParameters));
             return result;
         }
     }

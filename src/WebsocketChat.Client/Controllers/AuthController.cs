@@ -29,7 +29,7 @@ namespace WebsocketChat.Client.Controllers
         public async Task<IActionResult> Register([FromForm] RegisterModel model)
         {
             using var content = JsonHelper.ObjectToStringContent(model);
-            var response = await _api.PostUsersRegister(content);
+            var response = await _api.PostAuthRegister(content);
             if (response.IsSuccessStatusCode)
             {
                 var stringResponse = await response.Content.ReadAsStringAsync();
@@ -60,7 +60,7 @@ namespace WebsocketChat.Client.Controllers
         public async Task<IActionResult> Login([FromForm] LoginModel user)
         {
             using var content = JsonHelper.ObjectToStringContent(user);
-            var response = await _api.PostUsersLogin(content);
+            var response = await _api.PostAuthLogin(content);
             if (response.IsSuccessStatusCode)
             {
                 var stringResponse = await response.Content.ReadAsStringAsync();
@@ -80,7 +80,7 @@ namespace WebsocketChat.Client.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> LogOff()
         {
-            await _api.GetUsersLogout();
+            await _api.GetAuthLogout();
 
             Response.Cookies.Delete(RequestHelper.JwtCookiesKey);
             Response.Cookies.Delete(Library.Constants.WebSocketSessionTokenKey);
@@ -106,7 +106,7 @@ namespace WebsocketChat.Client.Controllers
             }
 
             using var content = JsonHelper.ObjectToStringContent(model);
-            var response = await _api.PostUsersChangePassword(content);
+            var response = await _api.PostAuthChangePassword(content);
             if (response.IsSuccessStatusCode)
             {
                 var stringResponse = await response.Content.ReadAsStringAsync();

@@ -32,7 +32,7 @@ namespace WebsocketChat.Client.JwtAuth
 
             var token = Request.Cookies[RequestHelper.JwtCookiesKey].ToString(null);
 
-            var response = await _apiHttpClient.GetUsersValidateToken(token);
+            var response = await _apiHttpClient.GetAuthValidateToken(token);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {

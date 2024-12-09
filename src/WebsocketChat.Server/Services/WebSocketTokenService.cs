@@ -6,10 +6,8 @@ using WebsocketChat.Server.Contexts;
 
 namespace WebsocketChat.Server.Services
 {
-    public class WebSocketTokenService : IWebSocketTokenService
+    public class WebSocketTokenService : BaseDbService<WebSocketToken>, IWebSocketTokenService
     {
-        private readonly AppIdentityDbContext _context;
-
         public WebSocketTokenService(AppIdentityDbContext context)
         {
             _context = context;
@@ -17,12 +15,9 @@ namespace WebsocketChat.Server.Services
 
         public Task<string> CreateAsync(string userId)
         {
-            if (userId is null)
-            {
-                throw new ArgumentNullException(nameof(userId));
-            }
+            ArgumentNullException.ThrowIfNull(userId);
 
-            return CreateAsynchronous(new WebSocketToken
+            return CreateEntityAsync(new WebSocketToken
             {
                 ExpirationDate = DateTime.Now.AddDays(Constants.TokenDaysExpirationTerm),
                 UserId = userId,
@@ -54,7 +49,7 @@ namespace WebsocketChat.Server.Services
             return foundToken != null;
         }
 
-        private async Task<string> CreateAsynchronous(WebSocketToken item)
+        private async Task<string> CreateEntityAsync(WebSocketToken item)
         {
             _context.Set<WebSocketToken>().Add(item);
             await _context.SaveChangesAsync();

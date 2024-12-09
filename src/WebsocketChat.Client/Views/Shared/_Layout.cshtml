@@ -28,6 +28,13 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div id="leftButtonsNav" class="navbar-collapse collapse d-lg-inline-flex flex-md-row">
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <ul class="navbar-nav flex-grow-1-reverse">
+                            @await Html.PartialAsync("_HeaderButton", ("Messages", "Chat", "mail", "Сообщения", "nav-link text-light"))
+                        </ul>
+                    }
                     <!--LEFT BUTTONS-->
                 </div>
                 <div id="rightButtonsNav" class="navbar-collapse collapse d-lg-inline-flex flex-md-row-reverse">

@@ -1,0 +1,18 @@
+﻿@model List<WebsocketChat.Library.Entities.WebSocketMessage>
+@{
+}
+
+<h2>Сообщения</h2>
+
+<div class="chat">
+    <div class="chat-container">
+        <div class="conversation">
+            <div id="messages" class="conversation-container">
+                @foreach (var message in Model)
+                {
+                    <p>@message.Date.ToString("d") - @message.UserNickname: @message.MessageText</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

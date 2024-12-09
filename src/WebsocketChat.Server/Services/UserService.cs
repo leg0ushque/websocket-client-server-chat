@@ -4,16 +4,10 @@ using WebsocketChat.Server.Identity;
 
 namespace WebsocketChat.Server.Services
 {
-    public class UserService
+    public class UserService(JwtTokenService jwtTokenService, UserManager<User> identityUserManager)
     {
-        private JwtTokenService _jwtTokenService;
-        private UserManager<User> _identityUserManager;
-
-        public UserService(JwtTokenService jwtTokenService, UserManager<User> identityUserManager)
-        {
-            _jwtTokenService = jwtTokenService;
-            _identityUserManager = identityUserManager;
-        }
+        private readonly JwtTokenService _jwtTokenService = jwtTokenService;
+        private readonly UserManager<User> _identityUserManager = identityUserManager;
 
         public Task<User> GetUserInfoFromTokenAsync(string token)
         {

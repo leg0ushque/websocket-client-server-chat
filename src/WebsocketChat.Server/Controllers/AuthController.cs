@@ -15,14 +15,12 @@ namespace WebsocketChat.Server.Controllers
         SignInManager<User> signInManager,
         UserManager<User> userManager,
         JwtTokenService jwtTokenService,
-        IWebSocketTokenService websocketTokenService,
-        IHttpContextAccessor httpContextAccessor) : ControllerBase
+        IWebSocketTokenService websocketTokenService) : ControllerBase
     {
         private readonly SignInManager<User> _signInManager = signInManager;
         private readonly UserManager<User> _userManager = userManager;
         private readonly JwtTokenService _jwtTokenService = jwtTokenService;
         private readonly IWebSocketTokenService _websocketTokenService = websocketTokenService;
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         /// <summary>
         /// Registers a new user.
@@ -204,9 +202,9 @@ namespace WebsocketChat.Server.Controllers
         {
             var cookiesKey = Library.Constants.WebSocketSessionTokenKey;
 
-            if (_httpContextAccessor.HttpContext.Request.Cookies.ContainsKey(cookiesKey))
+            if (HttpContext.Request.Cookies.ContainsKey(cookiesKey))
             {
-                _httpContextAccessor.HttpContext.Response.Cookies.Delete(cookiesKey);
+                HttpContext.Response.Cookies.Delete(cookiesKey);
             }
         }
     }
