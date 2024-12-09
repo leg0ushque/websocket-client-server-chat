@@ -48,7 +48,7 @@ namespace WebsocketChat.Server.Handlers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Message handler encountered an error: {ex}");
+                _logger.LogError(message: "Message handler encountered an error:", exception: ex);
                 await TryCloseWebSocket(webSocket, WebSocketCloseStatus.InternalServerError, "Internal error occurred");
             }
             finally
@@ -121,7 +121,7 @@ namespace WebsocketChat.Server.Handlers
             var userId = manager.GetSocketUserId(webSocket);
             if (userId != null)
             {
-                await manager.RemoveSocketAsync(userId);
+                await manager.RemoveSocketAsync(userId, cancellationToken);
                 _logger.LogInformation("WebSocket connection closed for user {0}", userId);
             }
         }
