@@ -32,7 +32,6 @@
         $(document).ready(function () {
             const wsUrl = "ws://localhost:5000/ws"; //$('body').data('ws-url');
 
-            debugger;
             if (!("WebSocket" in window)) {
                 showToast("WebSocket NOT supported by your Browser!");
                 return;
@@ -41,19 +40,15 @@
             const socket = new WebSocket(wsUrl);
 
             socket.onopen = function (event) {
-                debugger;
-                let handshakeMessage = {
-                    messageType: 1,
-                    userId: '@Model.UserId',
-                    token: '@Model.WebsocketToken',
-                    messageText: ""
-                };
+                let handshakeMessage = createHandshakeMessage('@Model.UserId', '@Model.WebsocketToken');
 
                 socket.send(JSON.stringify(handshakeMessage));
             };
 
             socket.onmessage = function (event) {
-                console.log('Message from server ', event.data);
+                var receivedMessage = JSON.parse(event.data);
+                debugger;
+                appendMessage(RECEIVED, receivedMessage.Message, receivedMessage.SenderNickname);
             };
 
             socket.onerror = function (error) {
@@ -63,8 +58,24 @@
             };
 
             socket.onclose = function (event) {
-                console.log('WebSocket connection closed: ', event);
+                console.log(`WebSocket closed. Clean: ${event.wasClean}, Code: ${event.code}, Reason: ${event.reason}`);
             };
+
+            $('#chat-form').submit(function (event) {
+                event.preventDefault();
+                sendMessage(socket);
+            });
+
+            function sendMessage(socket) {
+                let messageInput = document.getElementById("message-input");
+                let message = createChatMessage('@Model.UserId', '@Model.WebsocketToken', messageInput.value);
+
+                socket.send(JSON.stringify(message));
+
+                appendMessage(SENT, messageInput.value);
+
+                messageInput.value = '';
+            }
         });
     </script>
 }

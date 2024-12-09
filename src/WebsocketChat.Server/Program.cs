@@ -50,7 +50,13 @@ namespace WebsocketChat.Server
 
             app.UseCors("AllowAll");
 
-            app.UseWebSockets();
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            };
+
+            app.UseWebSockets(webSocketOptions);
 
             app.UseMiddleware<Middlewares.WebSocketMiddleware>();
 

@@ -1,32 +1,35 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WebsocketChat.Library.Entities;
+using WebsocketChat.Library.Models;
+using WebsocketChat.Server.Identity;
 using WebsocketChat.Server.Services;
 
 namespace WebsocketChat.Server.Handlers
 {
     public class MessageHandler : IMessageHandler
     {
-        private readonly JwtTokenService _jwtTokenService;
-        private readonly UserService _userService;
+        private readonly UserManager<User> _userManager;
         private readonly IWebSocketTokenValidationService _webSocketTokenValidationService;
+        private readonly ILogger<MessageHandler> _logger;
 
         public MessageHandler(
-            JwtTokenService jwtTokenService,
-            UserService userService,
-            IWebSocketTokenValidationService webSocketTokenValidationService)
+            UserManager<User> userManager,
+            IWebSocketTokenValidationService webSocketTokenValidationService,
+            ILogger<MessageHandler> logger)
         {
-            _jwtTokenService = jwtTokenService;
-            _userService = userService;
+            _userManager = userManager;
             _webSocketTokenValidationService = webSocketTokenValidationService;
+            _logger = logger;
         }
 
-        public async Task HandleMessageAsync(WebSocket webSocket, WebSocketConnectionManager manager,
-            CancellationToken ct = default)
+        public async Task HandleMessageAsync(WebSocket webSocket, WebSocketConnectionManager manager, CancellationToken cancellationToken = default)
         {
             var buffer = new byte[1024 * 4];
 
@@ -34,54 +37,92 @@ namespace WebsocketChat.Server.Handlers
             {
                 while (webSocket.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult result;
-                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
-
+                    var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, ct);
+                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, cancellationToken);
                         break;
                     }
-
-                    var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    var deserializedMessage = JsonConvert.DeserializeObject<WebSocketMessage>(receivedMessage);
-
-                    var wsTokenIsValid = await _webSocketTokenValidationService.ValidateAsync(
-                        deserializedMessage.Token,
-                        deserializedMessage.UserId);
-
-                    if(!wsTokenIsValid)
-                    {
-                        return;
-                    }
-
-                    if (deserializedMessage.IsSystemMessage)
-                    {
-
-                    }
-
-                    foreach (var connectedClient in manager.GetAllClients())
-                    {
-                        if (connectedClient.Value.State == WebSocketState.Open)
-                        {
-                            await connectedClient.Value.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count),
-                                result.MessageType, result.EndOfMessage, ct);
-                        }
-                    }
+                    await ProcessReceivedMessage(webSocket, buffer, result, manager, cancellationToken);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"WebSocket handling error: {ex.Message}");
+                _logger.LogError($"Message handler encountered an error: {ex}");
+                await TryCloseWebSocket(webSocket, WebSocketCloseStatus.InternalServerError, "Internal error occurred");
             }
             finally
             {
-                // Cleanup code
-                var id = manager.GetId(webSocket);
-                if (id != null)
+                await FinalizeWebSocketConnection(webSocket, manager, cancellationToken);
+            }
+        }
+
+        private async Task ProcessReceivedMessage(WebSocket webSocket, byte[] buffer, WebSocketReceiveResult result, WebSocketConnectionManager manager, CancellationToken cancellationToken)
+        {
+            var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+            var deserializedMessage = JsonConvert.DeserializeObject<WebSocketMessage>(receivedMessage);
+
+            if (!await _webSocketTokenValidationService.ValidateAsync(deserializedMessage.Token, deserializedMessage.UserId))
+            {
+                _logger.LogWarning("Invalid token received from UserID {0}", deserializedMessage.UserId);
+                return;
+            }
+
+            if (deserializedMessage.IsSystemMessage)
+            {
+                var existingSocket = manager.GetSocketByUserId(deserializedMessage.UserId);
+                if (existingSocket == null)
                 {
-                    await manager.RemoveSocketAsync(id, ct);
+                    // Adding WebSocket to manager, associated with a user ID
+                    manager.AddSocket(deserializedMessage.UserId, webSocket);
+                    _logger.LogInformation("New system connection established for UserId: {UserId}", deserializedMessage.UserId);
                 }
+                return;
+            }
+
+            await BroadcastMessageToClients(deserializedMessage, manager, cancellationToken);
+        }
+
+        private async Task BroadcastMessageToClients(WebSocketMessage message, WebSocketConnectionManager manager, CancellationToken cancellationToken)
+        {
+            var sender = await _userManager.FindByIdAsync(message.UserId);
+            var messageToSend = new SentMessageModel
+            {
+                Message = message.MessageText,
+                Date = DateTime.UtcNow,
+                SenderNickname = sender.Nickname,
+            };
+            var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageToSend));
+
+            foreach (var connectedWebSocket in manager.GetAllSockets())
+            {
+                if (connectedWebSocket.Value.State == WebSocketState.Open
+                    && connectedWebSocket.Key != sender.Id)
+                {
+                    await connectedWebSocket.Value.SendAsync(
+                        new ArraySegment<byte>(messageBytes, 0, messageBytes.Length),
+                        WebSocketMessageType.Text,
+                        true,
+                        cancellationToken);
+                }
+            }
+        }
+
+        private static async Task TryCloseWebSocket(WebSocket webSocket, WebSocketCloseStatus closeStatus, string statusDescription)
+        {
+            if (webSocket.State == WebSocketState.Open)
+            {
+                await webSocket.CloseAsync(closeStatus, statusDescription, CancellationToken.None);
+            }
+        }
+
+        private async Task FinalizeWebSocketConnection(WebSocket webSocket, WebSocketConnectionManager manager, CancellationToken cancellationToken)
+        {
+            var userId = manager.GetSocketUserId(webSocket);
+            if (userId != null)
+            {
+                await manager.RemoveSocketAsync(userId);
+                _logger.LogInformation("WebSocket connection closed for user {0}", userId);
             }
         }
     }

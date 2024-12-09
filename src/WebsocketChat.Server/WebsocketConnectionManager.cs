@@ -11,16 +11,15 @@ namespace WebsocketChat.Server
     {
         private readonly ConcurrentDictionary<string, WebSocket> _sockets = new();
 
-        public WebSocket GetSocketById(string id) => _sockets.FirstOrDefault(p => p.Key == id).Value;
+        public WebSocket GetSocketByUserId(string userId) => _sockets.FirstOrDefault(p => p.Key == userId).Value;
 
-        public ConcurrentDictionary<string, WebSocket> GetAllClients() => _sockets;
+        public ConcurrentDictionary<string, WebSocket> GetAllSockets() => _sockets;
 
-        public string GetId(WebSocket socket) => _sockets.FirstOrDefault(p => p.Value == socket).Key;
+        public string GetSocketUserId(WebSocket socket) => _sockets.FirstOrDefault(p => p.Value == socket).Key;
 
-        public void AddSocket(WebSocket socket)
+        public void AddSocket(string guid, WebSocket socket)
         {
-            string connId = Guid.NewGuid().ToString();
-            _sockets.TryAdd(connId, socket);
+            _sockets.TryAdd(guid, socket);
         }
 
         public async Task RemoveSocketAsync(string id, CancellationToken ct = default)

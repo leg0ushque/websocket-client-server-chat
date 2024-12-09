@@ -15,7 +15,8 @@
             <div class="form-group row pb-3">
                 <label asp-for="Email" class="col-md-4 control-label"></label>
                 <div class="col-md-8 p-0">
-                    <input asp-for="Email" class="form-control" id="emailInput" placeholder="Email" required />
+                    <input asp-for="Email" class="form-control" id="emailInput" placeholder="Email" required
+                    value="admin@mail.com"/>
                     <span asp-validation-for="Email" class="text-danger inputError"></span>
                 </div>
             </div>
@@ -23,7 +24,8 @@
             <div class="form-group row pb-3">
                 <label asp-for="Password" class="col-md-4 control-label"></label>
                 <div class="col-md-8 p-0">
-                    <input asp-for="Password" type="password" class="form-control" id="passwordInput" placeholder="Пароль" required />
+                    <input
+                        value="123456Aa_" asp-for="Password" type="password" class="form-control" id="passwordInput" placeholder="Пароль" required />
                     <span asp-validation-for="Password" class="text-danger inputError"></span>
                 </div>
             </div>

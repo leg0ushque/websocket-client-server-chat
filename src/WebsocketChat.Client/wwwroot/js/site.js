@@ -1,9 +1,15 @@
 ﻿const SENT = "sent", RECEIVED = "received", ERROR = "error";
 
-function createMessageElement(messageType, text, time) {
+function createMessageElement(messageType, sender, text, time) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message ' + messageType;
-    messageDiv.textContent = text;
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+
+    const senderSpan = document.createElement('span');
+    senderSpan.className = 'sender';
+    senderSpan.textContent = sender;
 
     const metadataSpan = document.createElement('span');
     metadataSpan.className = 'metadata';
@@ -13,6 +19,12 @@ function createMessageElement(messageType, text, time) {
     timeSpan.textContent = time;
 
     metadataSpan.appendChild(timeSpan);
+    if (messageType == RECEIVED) {
+        messageDiv.appendChild(senderSpan);
+    }
+
+    messageDiv.appendChild(textSpan);
+
     messageDiv.appendChild(metadataSpan);
 
     return messageDiv;
@@ -30,8 +42,13 @@ function getCurrentTime() {
     return `${hours}:${minutes}`;
 }
 
-function appendMessage(messageType, text) {
-    let messageToAdd = createMessageElement(messageType, text, getCurrentTime())
+function appendMessage(messageType, text, sender = '') {
+    let messageToAdd = createMessageElement(
+        messageType,
+        sender,
+        text,
+        getCurrentTime())
+
     messages.appendChild(messageToAdd);
     scrollToLastMessage();
 }
@@ -51,7 +68,20 @@ function showToast(message) {
         toast.removeClass('show');
     }, 3000);
 }
-function getTokenFromCookies(cookieName) {
-    let token = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
-    return token ? token.split('=')[1] : null;
+
+function createHandshakeMessage(userId, token) {
+    return createWebSocketMessage(true, userId, token)
+}
+
+function createChatMessage(userId, token, text) {
+    return createWebSocketMessage(false, userId, token, text);
+}
+
+function createWebSocketMessage(isSystemMessage, userId, token, messageText = '') {
+    return {
+        isSystemMessage: isSystemMessage,
+        userId,
+        token,
+        messageText
+    };
 }
