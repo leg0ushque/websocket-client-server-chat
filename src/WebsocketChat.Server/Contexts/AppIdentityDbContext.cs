@@ -21,7 +21,7 @@ namespace WebsocketChat.Server.Contexts
 
             builder.Entity<IdentityRole>().HasData(
                 new IdentityRole { Id = adminRoleId, Name = Identity.IdentityConstants.AdminRole, NormalizedName = Identity.IdentityConstants.AdminRole.ToUpper() },
-                new IdentityRole { Id = "2", Name = Identity.IdentityConstants.UserRole.ToUpper(), NormalizedName = Identity.IdentityConstants.UserRole.ToUpper() }
+                new IdentityRole { Id = "2", Name = Identity.IdentityConstants.UserRole, NormalizedName = Identity.IdentityConstants.UserRole.ToUpper() }
             );
 
             // FIRST USER

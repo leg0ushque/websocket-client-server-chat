@@ -49,5 +49,23 @@ namespace WebsocketChat.Server.Helpers
                 .Take(pageSize.Value)
                 .ToListAsync(cancellationToken);
         }
+
+        public static async Task<int> GetTotalPagesCountAsync<T>(IQueryable<T> itemsQuery, int? pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            pageSize ??= Library.Constants.DefaultPageSize;
+
+            if (pageSize.Value < Library.Constants.MinPageSize)
+            {
+                throw new InvalidOperationException($"Page size must be at least {Library.Constants.MinPageSize}.");
+            }
+
+            var itemsCount = await itemsQuery.CountAsync(cancellationToken);
+
+            var totalPages = itemsCount / pageSize.Value +
+                             (itemsCount % pageSize.Value > 0 ? ExtraPage : NoExtraPage);
+
+            return totalPages;
+        }
     }
 }

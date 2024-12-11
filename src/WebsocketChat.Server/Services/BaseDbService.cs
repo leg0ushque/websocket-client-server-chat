@@ -13,7 +13,7 @@ namespace WebsocketChat.Server.Services
     {
         protected AppIdentityDbContext _context;
 
-        protected async Task<string> CreateAsynchronous(TEntity item,
+        protected async Task<string> CreateEntityAsync(TEntity item,
             CancellationToken cancellationToken = default)
         {
             _context.Set<TEntity>().Add(item);

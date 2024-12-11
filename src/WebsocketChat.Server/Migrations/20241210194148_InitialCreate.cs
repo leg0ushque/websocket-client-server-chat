@@ -204,18 +204,18 @@ namespace WebsocketChat.Server.Migrations
                 values: new object[,]
                 {
                     { "1", null, "Admin", "ADMIN" },
-                    { "2", null, "USER", "USER" }
+                    { "2", null, "User", "USER" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Nickname", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "5bb2c97b-e059-419d-9f7c-1484ee9f6b43", 0, "74174e45-54c0-4a45-b958-d591849d14e6", "admin@mail.com", true, false, null, "Admin", "ADMIN@MAIL.COM", "ADMIN@MAIL.COM", "AQAAAAIAAYagAAAAEPpglDa6aZ9T9smdCIT7Je80ELSruzJvXyVuXObrTt2kT6O9Us/LXdqxh5B+LdrH3g==", null, false, "874eea46-8af3-4b60-8661-eefbba9bd643", false, "admin@mail.com" });
+                values: new object[] { "785a021d-3006-4c2f-85cd-80cd40754177", 0, "7b2ef98d-26e8-470a-ba4a-14fb5675c04c", "admin@mail.com", true, false, null, "Admin", "ADMIN@MAIL.COM", "ADMIN@MAIL.COM", "AQAAAAIAAYagAAAAEDgJoNU/HonttOQdyd/K8dmekKgd1w05Qta99DL86mP+/sxYPv1P+Aa8sNdCLvDlXw==", null, false, "1a774519-2a94-4ab7-9d03-a4dc9a3b3c8b", false, "admin@mail.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
-                values: new object[] { "1", "5bb2c97b-e059-419d-9f7c-1484ee9f6b43" });
+                values: new object[] { "1", "785a021d-3006-4c2f-85cd-80cd40754177" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

@@ -58,7 +58,7 @@ namespace WebsocketChat.Server.Migrations
                         new
                         {
                             Id = "2",
-                            Name = "USER",
+                            Name = "User",
                             NormalizedName = "USER"
                         });
                 });
@@ -152,7 +152,7 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "5bb2c97b-e059-419d-9f7c-1484ee9f6b43",
+                            UserId = "785a021d-3006-4c2f-85cd-80cd40754177",
                             RoleId = "1"
                         });
                 });
@@ -293,18 +293,18 @@ namespace WebsocketChat.Server.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "5bb2c97b-e059-419d-9f7c-1484ee9f6b43",
+                            Id = "785a021d-3006-4c2f-85cd-80cd40754177",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "74174e45-54c0-4a45-b958-d591849d14e6",
+                            ConcurrencyStamp = "7b2ef98d-26e8-470a-ba4a-14fb5675c04c",
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             Nickname = "Admin",
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPpglDa6aZ9T9smdCIT7Je80ELSruzJvXyVuXObrTt2kT6O9Us/LXdqxh5B+LdrH3g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDgJoNU/HonttOQdyd/K8dmekKgd1w05Qta99DL86mP+/sxYPv1P+Aa8sNdCLvDlXw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "874eea46-8af3-4b60-8661-eefbba9bd643",
+                            SecurityStamp = "1a774519-2a94-4ab7-9d03-a4dc9a3b3c8b",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });

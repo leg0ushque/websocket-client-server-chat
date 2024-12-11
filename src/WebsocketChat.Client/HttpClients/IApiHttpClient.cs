@@ -11,5 +11,7 @@ namespace WebsocketChat.Client.HttpClients
         Task<HttpResponseMessage> GetChatMessages(string userId = null,
             int? pageNumber = Library.Constants.MinPageNumber,
             int? pageSize = Library.Constants.MinPageSize);
+        Task<HttpResponseMessage> GetChatMessagesPagesCount(string userId = null,
+                    int? pageSize = Library.Constants.MinPageSize);
     }
 }

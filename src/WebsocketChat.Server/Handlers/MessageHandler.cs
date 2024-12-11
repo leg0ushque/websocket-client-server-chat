@@ -17,15 +17,18 @@ namespace WebsocketChat.Server.Handlers
     {
         private readonly UserManager<User> _userManager;
         private readonly IWebSocketTokenValidationService _webSocketTokenValidationService;
+        private readonly IMessageStorageService _messageStorageService;
         private readonly ILogger<MessageHandler> _logger;
 
         public MessageHandler(
             UserManager<User> userManager,
             IWebSocketTokenValidationService webSocketTokenValidationService,
+            IMessageStorageService messageStorageService,
             ILogger<MessageHandler> logger)
         {
             _userManager = userManager;
             _webSocketTokenValidationService = webSocketTokenValidationService;
+            _messageStorageService = messageStorageService;
             _logger = logger;
         }
 
@@ -62,7 +65,9 @@ namespace WebsocketChat.Server.Handlers
             var receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
             var deserializedMessage = JsonConvert.DeserializeObject<WebSocketMessage>(receivedMessage);
 
-            if (!await _webSocketTokenValidationService.ValidateAsync(deserializedMessage.Token, deserializedMessage.UserId))
+            if (!await _webSocketTokenValidationService.ValidateAsync(
+                    deserializedMessage.Token,
+                    deserializedMessage.UserId))
             {
                 _logger.LogWarning("Invalid token received from UserID {0}", deserializedMessage.UserId);
                 return;
@@ -79,6 +84,12 @@ namespace WebsocketChat.Server.Handlers
                 }
                 return;
             }
+
+            deserializedMessage.Date = DateTime.Now;
+            var storedId = await _messageStorageService.CreateAsync(deserializedMessage, cancellationToken);
+
+            _logger.LogWarning("Message was created in DB, created id='{Id}'", storedId);
+
 
             await BroadcastMessageToClients(deserializedMessage, manager, cancellationToken);
         }

@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using System;
-using WebsocketChat.Library.Models;
+using WebsocketChat.Library.Entities;
 using WebsocketChat.Server.Identity;
 using WebsocketChat.Server.Services;
-using Microsoft.AspNetCore.Authorization;
-using WebsocketChat.Server.Helpers;
 
 namespace WebsocketChat.Server.Controllers
 {
@@ -19,45 +19,91 @@ namespace WebsocketChat.Server.Controllers
         private readonly UserManager<User> _userManager = userManager;
         private readonly IMessageStorageService _messageStorageService = messageStorageService;
 
-        /// <summary>
-        /// Retrieves a set of own messages
-        /// </summary>
-        /// <response code="200">Success.</response>
-        /// <response code="401">Unauthorized</response>
+        private bool IsAdmin => User.IsInRole(Identity.IdentityConstants.AdminRole);
+
         [Authorize()]
-        [HttpGet("own")]
+        [HttpGet("get")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetOwnMessages(
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetMessages(
             [FromQuery] int? pageNumber = Library.Constants.MinPageNumber,
             [FromQuery] int? pageSize = Library.Constants.MinPageSize)
         {
             var userId = HttpContext.User.FindFirst(Identity.IdentityConstants.UserIdClaimType).Value;
-
             var user = await _userManager.FindByIdAsync(userId);
 
-            var messages = await _messageStorageService.GetAllByUserIdAsync(user.Id,
+            var messagesUserId = IsAdmin ? null : user.Id; // admin sees *all users* messages
+
+            var messages =  await _messageStorageService.GetAllByUserIdAsync(messagesUserId,
                 pageNumber, pageSize);
+
+            if (!IsAdmin)
+            {
+                await LoadNicknamesAsync(messages);
+            }
 
             return Ok(messages);
         }
 
-        /// <summary>
-        /// Retrieves a set of own messages
-        /// </summary>
-        /// <response code="200">Success.</response>
-        /// <response code="401">Unauthorized</response>
         [Authorize(Roles = Identity.IdentityConstants.AdminRole)]
-        [HttpGet("all")]
+        [HttpGet("get/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetAllMessages(
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetUserMessages(string userId,
             [FromQuery] int? pageNumber = Library.Constants.MinPageNumber,
             [FromQuery] int? pageSize = Library.Constants.MinPageSize)
         {
-            var messages = await _messageStorageService.GetAllAsync(pageNumber, pageSize);
+            var messages = await _messageStorageService.GetAllByUserIdAsync(userId,
+                pageNumber, pageSize);
+
+            if (IsAdmin)
+            {
+                await LoadNicknamesAsync(messages);
+            }
 
             return Ok(messages);
+        }
+
+        [Authorize()]
+        [HttpGet("getPages")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetMessagesPagesCount([FromQuery] string userId,
+            [FromQuery] int? pageSize = Library.Constants.MinPageSize)
+        {
+            if (!IsAdmin)
+            {
+                userId = HttpContext.User.FindFirst(Identity.IdentityConstants.UserIdClaimType).Value;
+            }
+
+            var pagesCount = await _messageStorageService.GetPagesCount(userId,
+                pageSize);
+
+            return Ok(pagesCount);
+        }
+
+
+        private async Task<Dictionary<string,string>> GetNicknamesAsync(IEnumerable<string> userIds)
+        {
+            var tasks = userIds.Select(id => _userManager.FindByIdAsync(id)).ToList();
+            var userResults = await Task.WhenAll(tasks);
+
+            return userResults.ToDictionary(x => x.Id, x => x.Nickname);
+        }
+
+        private async Task LoadNicknamesAsync(List<WebSocketMessage> messages)
+        {
+            var usersIds = messages.Select(x => x.UserId).Distinct().ToList();
+            var userNicknames = await GetNicknamesAsync(usersIds);
+
+            foreach (var message in messages)
+            {
+                if (userNicknames.ContainsKey(message.UserId))
+                {
+                    message.UserNickname = userNicknames[message.UserId];
+                }
+            }
         }
     }
 }

@@ -18,7 +18,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-toggleable-lg navbar-dark bg-gradient box-shadow" id="mainNavbar">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-gradient box-shadow" id="mainNavbar">
             <div class="container">
                 <a asp-action="Index" asp-controller="Home" class="navbar-brand nav-link text-light">
                     <span><b>Веб-сокет чат</b></span>
@@ -28,10 +28,11 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div id="leftButtonsNav" class="navbar-collapse collapse d-lg-inline-flex flex-md-row">
-
                     @if (User.Identity.IsAuthenticated)
                     {
                         <ul class="navbar-nav flex-grow-1-reverse">
+                            @await Html.PartialAsync("_HeaderButton", ("Index", "Chat", "mail", "Чат", "nav-link text-light"))
+
                             @await Html.PartialAsync("_HeaderButton", ("Messages", "Chat", "mail", "Сообщения", "nav-link text-light"))
                         </ul>
                     }

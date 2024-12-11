@@ -1,18 +1,132 @@
-﻿@model List<WebsocketChat.Library.Entities.WebSocketMessage>
+﻿@model (bool IsAdmin, string UserId)
 @{
+    var apiUrl = "messages/get/";
+    var pagesCountApiUrl = "getMessagesPages";
 }
 
-<h2>Сообщения</h2>
+<div class="container mt-5 pt-5 row">
+    <h2>Сообщения</h2>
 
-<div class="chat">
-    <div class="chat-container">
-        <div class="conversation">
-            <div id="messages" class="conversation-container">
-                @foreach (var message in Model)
-                {
-                    <p>@message.Date.ToString("d") - @message.UserNickname: @message.MessageText</p>
-                }
-            </div>
+    @if (Model.IsAdmin)
+    {
+        <div class="col-md-12 pb-3 ">
+            <input class="" type="text" id="userIdInput" placeholder="ID пользователя" value="@Model.UserId">
+            <button class="btn text-white" onclick="loadUserMessages()">Загрузить</button>
+        </div>
+    }
+
+    <div class="col-md-12 row pb-3">
+        <label class="col-md-auto pl-0 d-flex align-items-center mb-0" for="pageSizeSelect">Элементов:</label>
+        <div class="col-md-auto">
+            <select id="pageSizeSelect" class="form-control">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+
+        <div class="col-md-auto d-flex align-items-center mb-0">
+            <label>Страницы:</label>
+        </div>
+        <div class="col-md-auto">
+            <ul class="pagination mb-0">
+            </ul>
         </div>
     </div>
+
+
+    <div class="table-wrapper">
+        <table class="table table-bordered table-striped table-sm" id="messagesTable">
+            <thead>
+                <tr>
+                    <th style="width: 20%">Дата</th>
+                    <th style="width: 20%">Никнейм</th>
+                    <th>Сообщение</th>
+                </tr>
+            </thead>
+            <tbody id="messageRows">
+            </tbody>
+        </table>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const initialUserId = $('#userIdInput').val();
+            const initialPageSize = $('#pageSizeSelect').val();
+            fetchTotalPages(initialUserId, initialPageSize);
+        });
+
+        $('#pageSizeSelect').change(function () {
+            const userId = $('#userIdInput').val();
+            const pageSize = $(this).val();
+            fetchTotalPages(userId, pageSize);
+        });
+
+        function fetchTotalPages(userId, pageSize) {
+            const url = '@pagesCountApiUrl';
+            const queryParams = $.param({ userId: userId, pageSize: pageSize });
+
+            $.ajax({
+                url: `${url}?${queryParams}`,
+                type: 'GET',
+                contentType: 'application/json',
+                success: function (totalPages) {
+                    if (totalPages.count > 0) {
+                        setupPagination(totalPages.count, userId, 1, pageSize);
+                        loadMessages(1, userId, pageSize);
+                    } else {
+                        $('#messageRows').append(`<tr><td colspan="3">No messages available.</td></tr>`);
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching page count:', error);
+                    $('#messageRows').append(`<tr><td colspan="3">Error fetching pages information.</td></tr>`);
+                }
+            });
+        }
+
+        function loadMessages(pageNumber, userId, pageSize) {
+            const url = '@apiUrl';
+            const queryParams = $.param({ userId: userId, pageSize: pageSize, pageNumber: pageNumber });
+
+            $.ajax({
+                url: `${url}?${queryParams}`,
+                type: 'GET',
+                contentType: 'application/json',
+                success: function (response) {
+                    $('#messageRows').empty();
+                    if (response && response.length > 0) {
+                        response.forEach(function (message) {
+                            const formattedDate = new Date(message.date).toLocaleString();
+                            $('#messageRows').append(`<tr><td>${formattedDate}</td><td>${message.userNickname || "Unknown"}</td><td>${message.messageText}</td></tr>`);
+                        });
+                    } else {
+                        $('#messageRows').append(`<tr><td colspan="3">No messages available.</td></tr>`);
+                    }
+                },
+                error: function (error) {
+                    console.error('Error loading messages:', error);
+                    $('#messageRows').append(`<tr><td colspan="3">Error loading messages data.</td></tr>`);
+                }
+            });
+        }
+
+        function setupPagination(totalPages, userId, activePage, pageSize) {
+            const $pagination = $('.pagination');
+            $pagination.empty();
+            for (let i = 1; i <= totalPages; i++) {
+                const isActive = i === activePage ? 'active' : '';
+                $pagination.append(`<li class="page-item ${isActive}"><a class="page-link" href="#" onclick="setupPagination(${totalPages}, '${userId}', ${i}, ${pageSize}); loadMessages(${i}, '${userId}', ${pageSize}); return false;">${i}</a></li>`);
+            }
+        }
+
+        function loadUserMessages() {
+            const userId = $('#userIdInput').val();
+            const pageSize = $('#pageSizeSelect').val();
+            fetchTotalPages(userId, pageSize);
+        }
+    </script>
+}

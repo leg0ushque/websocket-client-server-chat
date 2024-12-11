@@ -47,7 +47,6 @@
 
             socket.onmessage = function (event) {
                 var receivedMessage = JSON.parse(event.data);
-                debugger;
                 appendMessage(RECEIVED, receivedMessage.Message, receivedMessage.SenderNickname);
             };
 

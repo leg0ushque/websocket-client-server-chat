@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --whatsapp-green: #005e54;
     --whatsapp-dark-green: #005e52;
     --whatsapp-light-green: #038a7c;
@@ -7,7 +7,7 @@
 
 /* Color styles */
 
-nav {
+body header nav {
     background-color: #005e54;
 }
 
@@ -56,8 +56,31 @@ footer {
     overflow-y: auto;
 }
 
-/* Chat */
+/* Messages table */
 
+.table-wrapper {
+    overflow-x: auto; /* Прокрутка по горизонтали, если таблица шире контейнера */
+}
+
+.table-wrapper .table {
+    width: 100%;
+    background-color: white;
+}
+
+.pagination .active .page-link {
+    background-color: var(--whatsapp-light-green);
+    color: white;
+    border-color: var(--whatsapp-dark-green);
+}
+/* Base style for pagination links */
+.pagination .page-link {
+    color: var(--whatsapp-dark-green);
+}
+
+#pageSizeSelect {
+    width: 50px
+}
+/* Chat */
 .chat {
     height: calc(90%);
     align-items: center;

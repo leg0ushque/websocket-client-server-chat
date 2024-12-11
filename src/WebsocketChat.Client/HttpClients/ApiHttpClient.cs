@@ -50,11 +50,23 @@ namespace WebsocketChat.Client.HttpClients
             int? pageSize = Library.Constants.MinPageSize)
         {
             var requestPath = string.IsNullOrEmpty(userId) ?
-                "Messages/all" : "Messages/own";
+                "Messages/get" : $"Messages/get/{userId}";
             var queryParameters = $"?pageNumber={pageNumber}&pageSize={pageSize}";
 
             RequestHelper.SetRequestToken(Client, HttpContextAccessor);
             var result = await Client.GetAsync(SetRequestPath(requestPath + queryParameters));
+            return result;
+        }
+
+        public async Task<HttpResponseMessage> GetChatMessagesPagesCount(string userId = null,
+                    int? pageSize = Library.Constants.MinPageSize)
+        {
+            var requestPath = string.IsNullOrEmpty(userId) ?
+                "Messages/getPages?" : $"Messages/getPages?userId={userId}&";
+            var pageSizeParameter = $"pageSize={pageSize}";
+
+            RequestHelper.SetRequestToken(Client, HttpContextAccessor);
+            var result = await Client.GetAsync(SetRequestPath(requestPath + pageSizeParameter));
             return result;
         }
     }
