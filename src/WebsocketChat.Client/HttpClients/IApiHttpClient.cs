@@ -8,6 +8,7 @@ namespace WebsocketChat.Client.HttpClients
         Task<HttpResponseMessage> PostAuthChangePassword(StringContent content);
         Task<HttpResponseMessage> PostAuthLogin(StringContent content);
         Task<HttpResponseMessage> PostAuthRegister(StringContent content);
+        Task<HttpResponseMessage> GetChatUsers();
         Task<HttpResponseMessage> GetChatMessages(string userId = null,
             int? pageNumber = Library.Constants.MinPageNumber,
             int? pageSize = Library.Constants.MinPageSize);

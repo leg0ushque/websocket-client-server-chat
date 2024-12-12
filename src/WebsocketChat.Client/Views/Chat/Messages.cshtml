@@ -1,17 +1,29 @@
-﻿@model (bool IsAdmin, string UserId)
+﻿@model (bool IsAdmin, string UserId, Dictionary<string, string> AllUsers)
 @{
-    var apiUrl = "messages/get/";
+    var apiUrl = "getMessages";
     var pagesCountApiUrl = "getMessagesPages";
+    var defaultSelectedUserId = Model.IsAdmin ? "" : Model.UserId;
+    var nicknamesHidden = Model.IsAdmin ? "" : "display: none";
+    var header = Model.IsAdmin ? "Сообщения пользователей" : "Ваши сообщения";
 }
 
 <div class="container mt-5 pt-5 row">
-    <h2>Сообщения</h2>
+    <h2>@header</h2>
 
     @if (Model.IsAdmin)
     {
-        <div class="col-md-12 pb-3 ">
+        <div class="col-md-12 pb-3" style="display: none">
             <input class="" type="text" id="userIdInput" placeholder="ID пользователя" value="@Model.UserId">
             <button class="btn text-white" onclick="loadUserMessages()">Загрузить</button>
+        </div>
+
+        <div class="users-container pb-3">
+            <a class="user-link" asp-action="Messages" asp-route-userId="">Все пользователи</a>
+
+            @foreach (var user in Model.AllUsers)
+            {
+                <a class="user-link" asp-action="Messages" asp-route-userId="@user.Key">@user.Value</a>
+            }
         </div>
     }
 
@@ -41,7 +53,10 @@
             <thead>
                 <tr>
                     <th style="width: 20%">Дата</th>
-                    <th style="width: 20%">Никнейм</th>
+                    @if(Model.IsAdmin)
+                    {
+                        <th style="width: 20%">Никнейм</th>
+                    }
                     <th>Сообщение</th>
                 </tr>
             </thead>
@@ -54,7 +69,7 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            const initialUserId = $('#userIdInput').val();
+            const initialUserId = $('#userIdInput')?.val();
             const initialPageSize = $('#pageSizeSelect').val();
             fetchTotalPages(initialUserId, initialPageSize);
         });
@@ -67,10 +82,14 @@
 
         function fetchTotalPages(userId, pageSize) {
             const url = '@pagesCountApiUrl';
-            const queryParams = $.param({ userId: userId, pageSize: pageSize });
+            let queryParams = { pageSize: pageSize };
+            if(userId)
+            {
+               queryParams.userId = userId
+            }
 
             $.ajax({
-                url: `${url}?${queryParams}`,
+                url: `${url}?${$.param(queryParams)}`,
                 type: 'GET',
                 contentType: 'application/json',
                 success: function (totalPages) {
@@ -90,18 +109,23 @@
 
         function loadMessages(pageNumber, userId, pageSize) {
             const url = '@apiUrl';
-            const queryParams = $.param({ userId: userId, pageSize: pageSize, pageNumber: pageNumber });
+
+            let queryParams = { pageSize: pageSize, pageNumber: pageNumber };
+            if (userId) {
+                queryParams.userId = userId
+            }
 
             $.ajax({
-                url: `${url}?${queryParams}`,
+                url: `${url}?${$.param(queryParams)}`,
                 type: 'GET',
                 contentType: 'application/json',
                 success: function (response) {
                     $('#messageRows').empty();
+
                     if (response && response.length > 0) {
                         response.forEach(function (message) {
                             const formattedDate = new Date(message.date).toLocaleString();
-                            $('#messageRows').append(`<tr><td>${formattedDate}</td><td>${message.userNickname || "Unknown"}</td><td>${message.messageText}</td></tr>`);
+                            $('#messageRows').append(`<tr><td>${formattedDate}</td><td style="@nicknamesHidden">${message.userNickname}</td><td>${message.messageText}</td></tr>`);
                         });
                     } else {
                         $('#messageRows').append(`<tr><td colspan="3">No messages available.</td></tr>`);

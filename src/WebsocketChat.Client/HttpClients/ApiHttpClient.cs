@@ -69,5 +69,14 @@ namespace WebsocketChat.Client.HttpClients
             var result = await Client.GetAsync(SetRequestPath(requestPath + pageSizeParameter));
             return result;
         }
+
+        public async Task<HttpResponseMessage> GetChatUsers()
+        {
+            var requestPath = "Messages/getUsers";
+
+            RequestHelper.SetRequestToken(Client, HttpContextAccessor);
+            var result = await Client.GetAsync(SetRequestPath(requestPath));
+            return result;
+        }
     }
 }

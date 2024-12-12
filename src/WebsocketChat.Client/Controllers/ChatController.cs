@@ -35,14 +35,17 @@ namespace WebsocketChat.Client.Controllers
 
         [Authorize]
         [HttpGet("messages")]
-        public IActionResult Messages([FromQuery] string userId)
+        public async Task<IActionResult> Messages([FromQuery] string userId)
         {
             if (!Guid.TryParse(userId, out _))
             {
                 userId = "";
             }
 
-            return View((User.IsInRole("Admin"), userId));
+            var allUsersResponse = await _api.GetChatUsers();
+            var allUsers = await JsonHelper.DeserializeContentAsync<Dictionary<string, string>>(allUsersResponse);
+
+            return View((User.IsInRole("Admin"), userId, allUsers));
         }
 
         [Authorize]
@@ -64,8 +67,8 @@ namespace WebsocketChat.Client.Controllers
         }
 
         [Authorize]
-        [HttpGet("messages/get/{userId?}")]
-        public async Task<IActionResult> GetMessages(string userId = null,
+        [HttpGet("getMessages")]
+        public async Task<IActionResult> GetMessages([FromQuery] string userId = null,
             [FromQuery] int? pageNumber = Library.Constants.MinPageNumber,
             [FromQuery] int? pageSize = Library.Constants.MinPageSize)
         {
@@ -75,10 +78,10 @@ namespace WebsocketChat.Client.Controllers
             }
 
             var messages = await _api.GetChatMessages(userId, pageNumber, pageSize);
+            var messagesList = await JsonHelper.DeserializeContentAsync<List<WebSocketMessage>>(
+                    messages);
 
-            return Ok(
-                await JsonHelper.DeserializeContentAsync<List<WebSocketMessage>>(
-                    messages));
+            return Ok(messagesList);
         }
 
         [Authorize]

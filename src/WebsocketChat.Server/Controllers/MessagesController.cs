@@ -37,7 +37,7 @@ namespace WebsocketChat.Server.Controllers
             var messages =  await _messageStorageService.GetAllByUserIdAsync(messagesUserId,
                 pageNumber, pageSize);
 
-            if (!IsAdmin)
+            if (IsAdmin)
             {
                 await LoadNicknamesAsync(messages);
             }
@@ -45,7 +45,7 @@ namespace WebsocketChat.Server.Controllers
             return Ok(messages);
         }
 
-        [Authorize(Roles = Identity.IdentityConstants.AdminRole)]
+        [Authorize()]
         [HttpGet("get/{userId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -54,6 +54,11 @@ namespace WebsocketChat.Server.Controllers
             [FromQuery] int? pageNumber = Library.Constants.MinPageNumber,
             [FromQuery] int? pageSize = Library.Constants.MinPageSize)
         {
+            if(!IsAdmin)
+            {
+                userId = HttpContext.User.FindFirst(Identity.IdentityConstants.UserIdClaimType).Value;
+            }
+
             var messages = await _messageStorageService.GetAllByUserIdAsync(userId,
                 pageNumber, pageSize);
 
@@ -83,6 +88,19 @@ namespace WebsocketChat.Server.Controllers
             return Ok(pagesCount);
         }
 
+        [Authorize(Roles = Identity.IdentityConstants.AdminRole)]
+        [HttpGet("getUsers")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetUsersList([FromQuery] string userId,
+            [FromQuery] int? pageSize = Library.Constants.MinPageSize)
+        {
+            var allUsers = _userManager.Users
+                .OrderBy(x => x.Nickname)
+                .ToDictionary(x => x.Id, x => x.Nickname);
+
+            return Ok(allUsers);
+        }
 
         private async Task<Dictionary<string,string>> GetNicknamesAsync(IEnumerable<string> userIds)
         {
