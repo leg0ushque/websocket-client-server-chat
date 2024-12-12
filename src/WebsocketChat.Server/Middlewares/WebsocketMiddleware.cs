@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using WebsocketChat.Server.Handlers;
 
@@ -26,13 +28,36 @@ namespace WebsocketChat.Server.Middlewares
 
             if (!context.WebSockets.IsWebSocketRequest)
             {
-                context.Response.StatusCode = 400; // Bad Request
-                await context.Response.WriteAsync("Not a WebSocket request");
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("Запрос не является WebSocket запросом");
                 return;
             }
 
             WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            await messageHandler.HandleMessageAsync(webSocket, manager);
+
+            var tcs = new TaskCompletionSource<bool>();
+
+            ThreadPool.QueueUserWorkItem(async _ =>
+            {
+                try
+                {
+                    await messageHandler.HandleMessageAsync(webSocket, manager);
+                    tcs.SetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+
+            try
+            {
+                await tcs.Task;  // ждем завершения фоновой задачи!
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка во время обработки сообщения в пуле потоков: " + ex.Message);
+            }
         }
     }
 }
