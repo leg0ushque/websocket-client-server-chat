@@ -78,7 +78,6 @@ namespace WebsocketChat.Server.Handlers
                 var existingSocket = manager.GetSocketByUserId(deserializedMessage.UserId);
                 if (existingSocket == null)
                 {
-                    // Adding WebSocket to manager, associated with a user ID
                     manager.AddSocket(deserializedMessage.UserId, webSocket);
                     _logger.LogInformation("New system connection established for UserId: {UserId}", deserializedMessage.UserId);
                 }
@@ -97,26 +96,44 @@ namespace WebsocketChat.Server.Handlers
         private async Task BroadcastMessageToClients(WebSocketMessage message, WebSocketConnectionManager manager, CancellationToken cancellationToken)
         {
             var sender = await _userManager.FindByIdAsync(message.UserId);
-            var messageToSend = new SentMessageModel
+
+            var messageToBroadcast = new SentMessageModel
             {
                 Message = message.MessageText,
                 Date = DateTime.UtcNow,
                 SenderNickname = sender.Nickname,
             };
-            var messageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageToSend));
+
+            var senderOkMessage = new SentMessageModel
+            {
+                IsReceived = true,
+                SenderNickname = sender.Nickname,
+                Message = message.MessageText,
+                Date = DateTime.UtcNow,
+            };
+
+            var broadcastMessageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(messageToBroadcast));
+            var okMessageBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(senderOkMessage));
 
             foreach (var connectedWebSocket in manager.GetAllSockets())
             {
-                if (connectedWebSocket.Value.State == WebSocketState.Open
-                    && connectedWebSocket.Key != sender.Id)
+                if (connectedWebSocket.Value.State == WebSocketState.Open)
                 {
-                    await connectedWebSocket.Value.SendAsync(
-                        new ArraySegment<byte>(messageBytes, 0, messageBytes.Length),
-                        WebSocketMessageType.Text,
-                        true,
-                        cancellationToken);
+                    var messageBytes = connectedWebSocket.Key != sender.Id ? broadcastMessageBytes : okMessageBytes;
+
+                    await SendCocketMessageAsync(connectedWebSocket.Value, messageBytes, cancellationToken);
                 }
             }
+        }
+
+        private static Task SendCocketMessageAsync(WebSocket webSocket, byte[] messageBytes,
+            CancellationToken cancellationToken = default)
+        {
+            return webSocket.SendAsync(
+                new ArraySegment<byte>(messageBytes, 0, messageBytes.Length),
+                WebSocketMessageType.Text,
+                true,
+                cancellationToken);
         }
 
         private static async Task TryCloseWebSocket(WebSocket webSocket, WebSocketCloseStatus closeStatus, string statusDescription)

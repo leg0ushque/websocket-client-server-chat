@@ -23,6 +23,7 @@ namespace WebsocketChat.Server
     public class Program
     {
         private const string ConnectionStringName = "ServerDbConnectionString";
+
         private static IConfiguration configuration { get; set; }
 
         public static void Main(string[] args)
